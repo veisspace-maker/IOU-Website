@@ -1,0 +1,247 @@
+import { Router, Request, Response, NextFunction } from 'express';
+import passport from '../middleware/auth';
+import speakeasy from 'speakeasy';
+import bcrypt from 'bcrypt';
+import { User } from '../types/models';
+import { isAuthenticated } from '../middleware/auth';
+import { generateTwoFactorSecret, verifyTwoFactorToken } from '../utils/twoFactor';
+import pool from '../config/database';
+
+const router = Router();
+
+// Login endpoint
+router.post('/login', (req: Request, res: Response, next: NextFunction) => {
+  passport.authenticate('local', (err: any, user: User | false, info: any) => {
+    if (err) {
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    if (!user) {
+      return res.status(401).json({ error: info?.message || 'Authentication failed' });
+    }
+
+    const { rememberMe } = req.body;
+
+    // Set session cookie duration based on remember me
+    if (rememberMe) {
+      // 30 days for remember me
+      req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
+    } else {
+      // Session cookie (expires when browser closes)
+      req.session.cookie.maxAge = undefined as any;
+    }
+
+    // Check if 2FA is enabled
+    if (user.twoFactorEnabled) {
+      // Store user temporarily in session for 2FA verification
+      req.session.pendingUser = user;
+      return res.json({ 
+        requiresTwoFactor: true,
+        message: 'Please provide 2FA code'
+      });
+    }
+
+    // Log in user without 2FA
+    req.logIn(user, (loginErr: any) => {
+      if (loginErr) {
+        return res.status(500).json({ error: 'Login failed' });
+      }
+
+      // Return user without sensitive data
+      const { passwordHash, twoFactorSecret, ...safeUser } = user;
+      return res.json({ 
+        user: safeUser,
+        message: 'Login successful'
+      });
+    });
+  })(req, res, next);
+});
+
+// Verify 2FA code
+router.post('/verify-2fa', (req: Request, res: Response) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ error: 'Token is required' });
+  }
+
+  const pendingUser = (req.session as any).pendingUser;
+
+  if (!pendingUser) {
+    return res.status(400).json({ error: 'No pending authentication' });
+  }
+
+  if (!pendingUser.twoFactorSecret) {
+    return res.status(400).json({ error: '2FA not configured' });
+  }
+
+  // Verify the token
+  const verified = speakeasy.totp.verify({
+    secret: pendingUser.twoFactorSecret,
+    encoding: 'base32',
+    token: token,
+    window: 2, // Allow 2 time steps before/after for clock drift
+  });
+
+  if (!verified) {
+    return res.status(401).json({ error: 'Invalid 2FA code' });
+  }
+
+  // Log in the user
+  req.logIn(pendingUser, (err: any) => {
+    if (err) {
+      return res.status(500).json({ error: 'Login failed' });
+    }
+
+    // Clear pending user
+    delete (req.session as any).pendingUser;
+
+    // Note: Session cookie duration was already set during initial login
+    // The remember me preference is preserved from the /login call
+
+    // Return user without sensitive data
+    const { passwordHash, twoFactorSecret, ...safeUser } = pendingUser;
+    return res.json({ 
+      user: safeUser,
+      message: 'Login successful'
+    });
+  });
+});
+
+// Logout endpoint
+router.post('/logout', (req: Request, res: Response) => {
+  req.logout((err: any) => {
+    if (err) {
+      return res.status(500).json({ error: 'Logout failed' });
+    }
+
+    req.session.destroy((destroyErr: any) => {
+      if (destroyErr) {
+        return res.status(500).json({ error: 'Session destruction failed' });
+      }
+
+      res.clearCookie('connect.sid');
+      return res.json({ message: 'Logout successful' });
+    });
+  });
+});
+
+// Get current user
+router.get('/me', (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  const user = req.user as User;
+  const { passwordHash, twoFactorSecret, ...safeUser } = user;
+  
+  return res.json({ user: safeUser });
+});
+
+// Setup 2FA - Generate secret
+router.post('/2fa/setup', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const user = req.user as User;
+    
+    // Generate new 2FA secret
+    const { secret, qrCodeUrl } = generateTwoFactorSecret(user.username);
+    
+    // Store secret temporarily (not enabled yet)
+    await pool.query(
+      'UPDATE users SET two_factor_secret = $1 WHERE id = $2',
+      [secret, user.id]
+    );
+    
+    return res.json({
+      secret,
+      qrCodeUrl,
+      message: 'Scan QR code with your authenticator app and verify with a token to enable 2FA',
+    });
+  } catch (error) {
+    console.error('2FA setup error:', error);
+    return res.status(500).json({ error: 'Failed to setup 2FA' });
+  }
+});
+
+// Enable 2FA - Verify token and enable
+router.post('/2fa/enable', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const user = req.user as User;
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ error: 'Token is required' });
+    }
+    
+    // Get the secret from database
+    const result = await pool.query(
+      'SELECT two_factor_secret FROM users WHERE id = $1',
+      [user.id]
+    );
+    
+    if (result.rows.length === 0 || !result.rows[0].two_factor_secret) {
+      return res.status(400).json({ error: '2FA not setup. Call /2fa/setup first' });
+    }
+    
+    const secret = result.rows[0].two_factor_secret;
+    
+    // Verify the token
+    const verified = verifyTwoFactorToken(secret, token);
+    
+    if (!verified) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    
+    // Enable 2FA
+    await pool.query(
+      'UPDATE users SET two_factor_enabled = TRUE WHERE id = $1',
+      [user.id]
+    );
+    
+    return res.json({ message: '2FA enabled successfully' });
+  } catch (error) {
+    console.error('2FA enable error:', error);
+    return res.status(500).json({ error: 'Failed to enable 2FA' });
+  }
+});
+
+// Disable 2FA
+router.post('/2fa/disable', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const user = req.user as User;
+    const { password } = req.body;
+    
+    if (!password) {
+      return res.status(400).json({ error: 'Password is required to disable 2FA' });
+    }
+    
+    // Verify password
+    const result = await pool.query(
+      'SELECT password_hash FROM users WHERE id = $1',
+      [user.id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const isValidPassword = await bcrypt.compare(password, result.rows[0].password_hash);
+    
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid password' });
+    }
+    
+    // Disable 2FA
+    await pool.query(
+      'UPDATE users SET two_factor_enabled = FALSE, two_factor_secret = NULL WHERE id = $1',
+      [user.id]
+    );
+    
+    return res.json({ message: '2FA disabled successfully' });
+  } catch (error) {
+    console.error('2FA disable error:', error);
+    return res.status(500).json({ error: 'Failed to disable 2FA' });
+  }
+});
+
+export default router;
