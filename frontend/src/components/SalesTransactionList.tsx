@@ -7,17 +7,23 @@ import {
   Paper,
   CircularProgress,
   Divider,
-  IconButton,
   Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  TextField,
+  Collapse,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { format } from 'date-fns';
-import { SalesTransaction, deleteSale } from '../api/salesApi';
+import { SalesTransaction, deleteSale, updateSale, UpdateSaleData } from '../api/salesApi';
 import { useScrollPreservation } from '../hooks/useScrollPreservation';
 
 interface SalesTransactionListProps {
@@ -25,7 +31,6 @@ interface SalesTransactionListProps {
   loading: boolean;
   error: string | null;
   onTransactionUpdate: () => void;
-  onEdit: (transaction: SalesTransaction) => void;
 }
 
 const SalesTransactionList: React.FC<SalesTransactionListProps> = ({
@@ -33,8 +38,21 @@ const SalesTransactionList: React.FC<SalesTransactionListProps> = ({
   loading,
   error,
   onTransactionUpdate,
-  onEdit,
 }) => {
+  // Expanded transaction state
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Edit form state
+  const [item, setItem] = useState<string>('');
+  const [price, setPrice] = useState<string>('');
+  const [quantity, setQuantity] = useState<string>('1');
+  const [date, setDate] = useState<Date | null>(null);
+  const [description, setDescription] = useState<string>('');
+  const [seller, setSeller] = useState<string>('');
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
   // Delete confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<SalesTransaction | null>(null);
@@ -43,7 +61,26 @@ const SalesTransactionList: React.FC<SalesTransactionListProps> = ({
   // Scroll preservation
   const scrollContainerRef = useScrollPreservation([transactions]);
 
-  const handleDeleteClick = (transaction: SalesTransaction) => {
+  const handleTransactionClick = (transaction: SalesTransaction) => {
+    if (expandedId === transaction.id) {
+      // Collapse if already expanded
+      setExpandedId(null);
+    } else {
+      // Expand and populate form
+      setExpandedId(transaction.id);
+      setItem(transaction.item || '');
+      const totalPrice = (transaction.price || 0) * (transaction.quantity || 1);
+      setPrice(totalPrice.toString());
+      setQuantity(transaction.quantity?.toString() || '1');
+      setDate(transaction.date ? new Date(transaction.date) : null);
+      setDescription(transaction.description || '');
+      setSeller(transaction.seller || '');
+      setShowError(false);
+    }
+  };
+
+  const handleDeleteClick = (transaction: SalesTransaction, e: React.MouseEvent) => {
+    e.stopPropagation();
     setTransactionToDelete(transaction);
     setDeleteDialogOpen(true);
   };
@@ -62,6 +99,7 @@ const SalesTransactionList: React.FC<SalesTransactionListProps> = ({
       
       setDeleteDialogOpen(false);
       setTransactionToDelete(null);
+      setExpandedId(null);
       onTransactionUpdate();
     } catch (err: any) {
       console.error('Error deleting sales transaction:', err);
@@ -69,6 +107,88 @@ const SalesTransactionList: React.FC<SalesTransactionListProps> = ({
     } finally {
       setDeleting(false);
     }
+  };
+
+  const handleSaveEdit = async () => {
+    const transaction = transactions.find(t => t.id === expandedId);
+    if (!transaction) return;
+
+    // Validate item name
+    if (!item.trim()) {
+      setErrorMessage('Item name is required');
+      setShowError(true);
+      return;
+    }
+
+    // Validate seller
+    if (!seller) {
+      setErrorMessage('Seller is required');
+      setShowError(true);
+      return;
+    }
+
+    // Validate price
+    const priceValue = parseFloat(price);
+    
+    if (isNaN(priceValue) || priceValue <= 0) {
+      setErrorMessage('Price must be a positive number greater than zero');
+      setShowError(true);
+      return;
+    }
+
+    // Validate quantity
+    const quantityValue = parseInt(quantity);
+    
+    if (isNaN(quantityValue) || quantityValue <= 0) {
+      setErrorMessage('Quantity must be a positive integer');
+      setShowError(true);
+      return;
+    }
+
+    // Validate date
+    if (!date) {
+      setErrorMessage('Date is required');
+      setShowError(true);
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      
+      // Calculate price per unit from total price
+      const pricePerUnit = priceValue / quantityValue;
+
+      // Prepare data for API
+      const updateData: UpdateSaleData = {
+        item: item.trim(),
+        price: pricePerUnit,
+        quantity: quantityValue,
+        date: format(date, 'yyyy-MM-dd'),
+        seller: seller,
+      };
+
+      // Add description if provided
+      if (description.trim()) {
+        updateData.description = description.trim();
+      }
+
+      // Update sale transaction
+      await updateSale(transaction.id, updateData);
+
+      // Close dropdown and notify parent
+      setExpandedId(null);
+      onTransactionUpdate();
+    } catch (error: any) {
+      console.error('Error updating sale:', error);
+      setErrorMessage(error.message || 'Failed to update sales transaction');
+      setShowError(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCloseError = () => {
+    setShowError(false);
   };
 
   if (loading) {
@@ -122,9 +242,7 @@ const SalesTransactionList: React.FC<SalesTransactionListProps> = ({
           {transactions.map((transaction, index) => {
             const transactionDate = new Date(transaction.date);
             const formattedDate = format(transactionDate, 'MMM d, yyyy');
-            
-            // Debug logging
-            console.log('Transaction:', transaction.item, 'Quantity:', transaction.quantity, 'Type:', typeof transaction.quantity);
+            const isExpanded = expandedId === transaction.id;
 
             return (
               <React.Fragment key={transaction.id}>
@@ -133,9 +251,14 @@ const SalesTransactionList: React.FC<SalesTransactionListProps> = ({
                     display: 'block',
                     py: { xs: 2.5, sm: 2 },
                     px: { xs: 1.5, sm: 2 },
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'action.hover',
+                    },
                   }}
+                  onClick={() => handleTransactionClick(transaction)}
                 >
-                  {/* Header: Date and Actions */}
+                  {/* Header: Date and Expand Icon */}
                   <Box sx={{ 
                     display: 'flex', 
                     alignItems: 'center', 
@@ -151,26 +274,7 @@ const SalesTransactionList: React.FC<SalesTransactionListProps> = ({
                       {formattedDate}
                     </Typography>
 
-                    {/* Action Buttons */}
-                    <Box sx={{ display: 'flex', gap: 0.5, ml: 'auto', flexShrink: 0 }}>
-                      <IconButton
-                        size="small"
-                        onClick={() => onEdit(transaction)}
-                        sx={{ padding: { xs: '6px', sm: '8px' } }}
-                        aria-label="edit"
-                      >
-                        <EditIcon sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }} />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteClick(transaction)}
-                        color="error"
-                        sx={{ padding: { xs: '6px', sm: '8px' } }}
-                        aria-label="delete"
-                      >
-                        <DeleteIcon sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }} />
-                      </IconButton>
-                    </Box>
+                    {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                   </Box>
 
                   {/* Item Name - Full Row */}
@@ -246,6 +350,129 @@ const SalesTransactionList: React.FC<SalesTransactionListProps> = ({
                       {transaction.description}
                     </Typography>
                   )}
+
+                  {/* Expanded Edit Form */}
+                  <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                    <Box 
+                      sx={{ 
+                        mt: 3, 
+                        pt: 3, 
+                        borderTop: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Typography variant="h6" sx={{ mb: 2, fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
+                        Edit Sales Transaction
+                      </Typography>
+
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <TextField
+                          label="Item"
+                          value={item}
+                          onChange={(e) => setItem(e.target.value)}
+                          fullWidth
+                          required
+                          placeholder="e.g., Product A, Service B"
+                        />
+                        
+                        <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+                          <TextField
+                            label="Total Price ($)"
+                            type="number"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            fullWidth
+                            inputProps={{ min: 0, step: 0.01 }}
+                            required
+                            helperText={
+                              price && quantity && parseFloat(price) > 0 && parseInt(quantity) > 1
+                                ? `${(parseFloat(price) / parseInt(quantity)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} per unit`
+                                : ''
+                            }
+                          />
+
+                          <TextField
+                            label="Quantity"
+                            type="number"
+                            value={quantity}
+                            onChange={(e) => setQuantity(e.target.value)}
+                            sx={{ width: { xs: '100%', sm: '150px' } }}
+                            inputProps={{ min: 1, step: 1 }}
+                            required
+                          />
+                        </Box>
+
+                        <DatePicker
+                          label="Date"
+                          value={date}
+                          onChange={(newValue) => setDate(newValue)}
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              required: true,
+                            },
+                          }}
+                        />
+
+                        <FormControl fullWidth required>
+                          <InputLabel>Seller</InputLabel>
+                          <Select
+                            value={seller}
+                            label="Seller"
+                            onChange={(e) => setSeller(e.target.value)}
+                          >
+                            <MenuItem value="leva">Leva</MenuItem>
+                            <MenuItem value="danik">Danik</MenuItem>
+                          </Select>
+                        </FormControl>
+
+                        <TextField
+                          label="Description (Optional)"
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          fullWidth
+                          placeholder="e.g., Additional details about the sale"
+                          multiline
+                          rows={2}
+                        />
+
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(transaction, e);
+                            }}
+                            color="error"
+                            disabled={submitting}
+                          >
+                            Delete
+                          </Button>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedId(null);
+                            }}
+                            disabled={submitting}
+                            sx={{ color: 'text.secondary' }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSaveEdit();
+                            }}
+                            variant="contained"
+                            color="primary"
+                            disabled={submitting || !item.trim() || !price || !date || !seller}
+                          >
+                            {submitting ? 'Saving...' : 'Save Changes'}
+                          </Button>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Collapse>
                 </ListItem>
                 {index < transactions.length - 1 && <Divider />}
               </React.Fragment>
@@ -269,6 +496,19 @@ const SalesTransactionList: React.FC<SalesTransactionListProps> = ({
           </Button>
           <Button onClick={handleConfirmDelete} color="error" variant="contained" disabled={deleting}>
             {deleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Error Dialog */}
+      <Dialog open={showError} onClose={handleCloseError}>
+        <DialogTitle>Error</DialogTitle>
+        <DialogContent>
+          <Typography>{errorMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseError} color="primary">
+            OK
           </Button>
         </DialogActions>
       </Dialog>

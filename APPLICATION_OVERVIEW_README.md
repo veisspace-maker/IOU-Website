@@ -123,6 +123,7 @@ The application provides a unified interface for financial tracking, HR manageme
 - Public holidays management
 - Company closed dates
 - Employee birthdays
+- Birthday notification preferences
 
 **Key Components:**
 - `SettingsPage.tsx`
@@ -130,6 +131,7 @@ The application provides a unified interface for financial tracking, HR manageme
 - `PublicHolidaysManager.tsx`
 - `ClosedDatesManager.tsx`
 - `BirthdaysManager.tsx`
+- `NotificationSettings.tsx`
 
 **API Endpoints:**
 - `/api/auth/*` - Authentication
@@ -145,41 +147,46 @@ The application provides a unified interface for financial tracking, HR manageme
 {
   "react": "^18.2.0",
   "react-dom": "^18.2.0",
-  "react-router-dom": "^6.x",
-  "@reduxjs/toolkit": "^1.9.x",
-  "react-redux": "^8.x",
-  "@mui/material": "^5.x",
-  "@mui/x-date-pickers": "^6.x",
-  "axios": "^1.x",
-  "date-fns": "^2.x"
+  "react-router-dom": "^6.21.1",
+  "@mui/material": "^5.15.3",
+  "@mui/icons-material": "^5.15.3",
+  "@mui/x-date-pickers": "^6.18.7",
+  "@emotion/react": "^11.11.3",
+  "@emotion/styled": "^11.11.0",
+  "axios": "^1.6.5",
+  "date-fns": "^3.0.6",
+  "date-fns-tz": "^2.0.0"
 }
 ```
 
 ### Backend Dependencies
 ```json
 {
-  "express": "^4.18.x",
-  "typescript": "^5.x",
-  "pg": "^8.x",
-  "passport": "^0.6.x",
-  "passport-local": "^1.0.x",
-  "express-session": "^1.17.x",
-  "bcrypt": "^5.x",
-  "speakeasy": "^2.x",
-  "uuid": "^9.x",
-  "dotenv": "^16.x",
-  "cors": "^2.8.x"
+  "express": "^4.18.2",
+  "typescript": "^5.3.3",
+  "pg": "^8.11.3",
+  "passport": "^0.7.0",
+  "passport-local": "^1.0.0",
+  "express-session": "^1.17.3",
+  "bcrypt": "^5.1.1",
+  "speakeasy": "^2.0.0",
+  "uuid": "^13.0.0",
+  "dotenv": "^16.3.1",
+  "cors": "^2.8.5",
+  "date-fns": "^3.0.6",
+  "date-fns-tz": "^2.0.0"
 }
 ```
 
 ### Development Tools
 ```json
 {
-  "vite": "^4.x",
-  "vitest": "^0.34.x",
-  "@testing-library/react": "^14.x",
-  "tsx": "^3.x",
-  "nodemon": "^3.x"
+  "vite": "^5.0.11",
+  "vitest": "^1.1.0",
+  "@testing-library/react": "^14.1.2",
+  "tsx": "^4.7.0",
+  "fast-check": "^3.15.0",
+  "supertest": "^7.2.2"
 }
 ```
 
@@ -200,15 +207,7 @@ cd iou-application
 
 2. **Install dependencies**
 ```bash
-# Install root dependencies
-npm install
-
-# Install backend dependencies
-cd backend
-npm install
-
-# Install frontend dependencies
-cd ../frontend
+# Install all dependencies (root, backend, and frontend)
 npm install
 ```
 
@@ -236,6 +235,13 @@ npm run setup-db
 
 5. **Start the development servers**
 
+Both servers:
+```bash
+npm run dev
+```
+
+Or separately:
+
 Backend:
 ```bash
 cd backend
@@ -251,6 +257,7 @@ npm run dev
 6. **Access the application**
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3001
+- Health Check: http://localhost:3001/health
 
 ### Initial Setup
 
@@ -385,9 +392,6 @@ const ProtectedRoute = ({ children }) => {
 ├── /debt-tracker (Debt Tracker)
 ├── /sales (Sales Tracker)
 ├── /leave (Leave Tracker)
-├── /money (Money Mode Selection)
-│   ├── /money/personal (Personal Money)
-│   └── /money/company (Company Money)
 └── /settings (Settings)
     ├── Account
     ├── Public Holidays
@@ -404,57 +408,19 @@ const ProtectedRoute = ({ children }) => {
 
 ## State Management
 
-### Redux Store Structure
+### State Management Approach
 
-```typescript
-{
-  user: {
-    currentUser: User | null,
-    loading: boolean,
-    error: string | null
-  },
-  transactions: {
-    items: Transaction[],
-    total: number,
-    loading: boolean,
-    error: string | null
-  },
-  leave: {
-    records: LeaveRecord[],
-    total: number,
-    loading: boolean,
-    error: string | null
-  },
-  holidays: {
-    items: PublicHoliday[],
-    loading: boolean,
-    error: string | null
-  },
-  closedDates: {
-    items: ClosedDate[],
-    loading: boolean,
-    error: string | null
-  },
-  birthdays: {
-    items: Birthday[],
-    loading: boolean,
-    error: string | null
-  }
-}
-```
+The application uses React Context API for authentication state management:
 
-### Redux Slices
+- **AuthContext**: Manages user authentication state, login/logout, and session handling
+- **Component State**: Local state for forms and UI interactions
+- **API Calls**: Direct API calls with axios for data fetching and mutations
 
-- `userSlice.ts`: User authentication state
-- `transactionsSlice.ts`: Transaction data
-- `leaveSlice.ts`: Leave records
-- `holidaysSlice.ts`: Public holidays
-- `closedDatesSlice.ts`: Closed dates
-- `birthdaysSlice.ts`: Birthday records
-
-### Middleware
-
-- `reactiveUpdates.ts`: Automatic data refresh on changes
+This lightweight approach provides:
+- Simple authentication flow
+- Minimal boilerplate
+- Easy to understand and maintain
+- Sufficient for the application's needs
 
 ## API Documentation
 

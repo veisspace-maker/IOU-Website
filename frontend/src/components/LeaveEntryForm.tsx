@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  TextField,
   Button,
   Typography,
   Paper,
@@ -15,8 +14,7 @@ import {
   Fade,
 } from '@mui/material';
 import { TransitionProps } from '@mui/material/transitions';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers';
 import axios from 'axios';
 import { format, isBefore, startOfDay } from 'date-fns';
 
@@ -28,11 +26,6 @@ const Transition = React.forwardRef(function Transition(
 ) {
   return <Fade ref={ref} {...props} />;
 });
-
-interface User {
-  id: string;
-  username: string;
-}
 
 interface PublicHoliday {
   id: string;
@@ -296,11 +289,10 @@ const LeaveEntryForm: React.FC<LeaveEntryFormProps> = ({
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Paper elevation={2} sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Book Leave for {selectedPersonName}
-        </Typography>
+    <Paper elevation={2} sx={{ p: 3 }}>
+      <Typography variant="h6" gutterBottom>
+        Book Leave for {selectedPersonName}
+      </Typography>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
@@ -426,8 +418,7 @@ const LeaveEntryForm: React.FC<LeaveEntryFormProps> = ({
           </DialogActions>
         </Dialog>
       </Paper>
-    </LocalizationProvider>
-  );
-};
-
-export default LeaveEntryForm;
+    );
+  };
+  
+  export default LeaveEntryForm;

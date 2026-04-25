@@ -1,22 +1,51 @@
-# IOU
+# IOU Application
 
-Internal web application for tracking money transactions and employee leave.
+A comprehensive business management system for tracking sales, debts, employee leave, and company operations.
+
+## Quick Links
+
+- [Application Overview](APPLICATION_OVERVIEW_README.md) - Complete feature documentation
+- [Sales Tracker](SALES_TRACKER_README.md) - Sales transaction management
+- [Debt Tracker](DEBT_TRACKER_README.md) - Debt tracking between partners
+- [Leave Tracker](LEAVE_TRACKER_README.md) - Employee leave management
+- [Settings](SETTINGS_README.md) - User accounts and calendar settings
+
+## Features
+
+- **Sales Tracker**: Record and analyze sales with item-level insights and seller attribution
+- **Debt Tracker**: Track money owed between Lev and Danik with automatic calculations
+- **Leave Tracker**: Manage employee leave with intelligent business day calculations
+- **Settings**: Configure users, holidays, closed dates, and birthdays
 
 ## Project Structure
 
 ```
-company-tracker/
-├── backend/          # Node.js/Express API
+iou-application/
+├── backend/                    # Node.js/Express API
 │   ├── src/
-│   │   ├── config/   # Database and configuration
-│   │   └── index.ts  # Server entry point
+│   │   ├── business-logic/     # Business calculations
+│   │   ├── config/             # Database and configuration
+│   │   ├── middleware/         # Express middleware
+│   │   ├── repositories/       # Data access layer
+│   │   ├── routes/             # API endpoints
+│   │   ├── scripts/            # Database scripts
+│   │   ├── types/              # TypeScript types
+│   │   ├── utils/              # Utility functions
+│   │   └── index.ts            # Server entry point
 │   └── package.json
-├── frontend/         # React application
+├── frontend/                   # React application
 │   ├── src/
-│   │   ├── App.tsx
-│   │   └── main.tsx
+│   │   ├── api/                # API client functions
+│   │   ├── components/         # React components
+│   │   ├── contexts/           # React contexts
+│   │   ├── hooks/              # Custom hooks
+│   │   ├── pages/              # Page components
+│   │   ├── store/              # Redux store
+│   │   ├── utils/              # Utility functions
+│   │   ├── App.tsx             # Root component
+│   │   └── main.tsx            # Entry point
 │   └── package.json
-└── package.json      # Root workspace configuration
+└── package.json                # Root workspace configuration
 ```
 
 ## Prerequisites
@@ -24,7 +53,7 @@ company-tracker/
 - Node.js 18+ and npm
 - PostgreSQL 14+
 
-## Setup Instructions
+## Quick Start
 
 ### 1. Install Dependencies
 
@@ -32,39 +61,59 @@ company-tracker/
 npm install
 ```
 
-This will install dependencies for both frontend and backend workspaces.
+This installs dependencies for both frontend and backend workspaces.
 
 ### 2. Database Setup
 
 Create a PostgreSQL database:
 
 ```bash
-createdb company_tracker
+createdb iou_db
 ```
 
-Set up the database schema:
+Set up the database schema and initial data:
 
 ```bash
-psql -d company_tracker -f backend/src/config/schema.sql
+cd backend
+npm run setup-db
 ```
+
+This script will:
+- Create all required tables
+- Set up indexes and constraints
+- Initialize the database structure
 
 ### 3. Environment Configuration
 
-Copy the example environment file and configure it:
+**Backend** - Copy and configure:
 
 ```bash
 cp backend/.env.example backend/.env
 ```
 
-Edit `backend/.env` with your database credentials and desired timezone.
+Edit `backend/.env`:
+```env
+PORT=3001
+DATABASE_URL=postgresql://user:password@localhost:5432/iou_db
+DB_TIMEZONE=Australia/Melbourne
+SESSION_SECRET=your-secret-key-change-in-production
+NODE_ENV=development
+```
 
-### 4. Initialize User Passwords
+**Frontend** - Copy and configure:
 
-The schema creates three users with placeholder passwords. You'll need to update these with proper bcrypt hashes. You can use the backend application to generate hashes or use a script.
+```bash
+cp frontend/.env.example frontend/.env
+```
 
-## Development
+Edit `frontend/.env`:
+```env
+VITE_API_URL=http://localhost:3001
+```
 
-Start both frontend and backend in development mode with hot reload:
+### 4. Start Development Servers
+
+Start both frontend and backend:
 
 ```bash
 npm run dev
@@ -80,46 +129,228 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
-## Testing
+### 5. Access the Application
 
-Run tests for both workspaces:
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3001
+- Health Check: http://localhost:3001/health
 
+### 6. Initial Setup
+
+1. Create your first user account through the login page
+2. Configure public holidays in Settings
+3. Add any company closed dates
+4. Start tracking sales, debts, and leave!
+
+## Development
+
+### Available Scripts
+
+**Root:**
+- `npm run dev` - Start both frontend and backend
+- `npm test` - Run all tests
+- `npm run dev:backend` - Start backend only
+- `npm run dev:frontend` - Start frontend only
+
+**Backend:**
+- `npm run dev` - Start with hot reload
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm test` - Run tests
+- `npm run setup-db` - Initialize database
+
+**Frontend:**
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm test` - Run tests
+
+### Database Scripts
+
+Located in `backend/src/scripts/`:
+
+- `setupDatabase.ts` - Initialize database schema
+- `initUsers.ts` - Create initial users
+- `seedReasonableTestData.ts` - Add realistic test data
+- `seedStressTestData.ts` - Add large dataset for testing
+- `clearStressTestData.ts` - Remove stress test data
+- `addSalesTransactionsTable.ts` - Add sales table
+- `addDebtTransactionsV2Table.ts` - Add debt v2 table
+- `addQuantityToSalesTransactions.ts` - Add quantity column
+- `addSellerToSalesTransactions.ts` - Add seller column
+- `verifySalesTable.ts` - Verify sales table structure
+- `verifyDebtV2Table.ts` - Verify debt table structure
+- `setSimplePassword.ts` - Set simple password for testing
+- `setPin.ts` - Set PIN for user
+- `resetPassword.ts` - Reset user password
+- `disableTwoFactor.ts` - Disable 2FA for user
+
+Run scripts with:
 ```bash
-npm test
+cd backend
+npx tsx src/scripts/scriptName.ts
 ```
 
 ## Technology Stack
 
-**Frontend:**
-- React 18 with TypeScript
-- Material-UI (MUI)
-- Redux Toolkit
-- React Router
-- Vite
+### Frontend
+- **React 18** with TypeScript
+- **Material-UI (MUI) v5** - UI components
+- **Redux Toolkit** - State management
+- **React Router v6** - Routing
+- **Vite** - Build tool
+- **date-fns** - Date handling
+- **Axios** - HTTP client
 
-**Backend:**
-- Node.js with Express
-- TypeScript
-- PostgreSQL with pg driver
-- Passport.js for authentication
-- bcrypt for password hashing
+### Backend
+- **Express.js** with TypeScript
+- **PostgreSQL** - Database
+- **Passport.js** - Authentication
+- **express-session** - Session management
+- **bcrypt** - Password hashing
+- **speakeasy** - Two-factor authentication (TOTP)
+- **date-fns-tz** - Timezone handling
 
-**Testing:**
-- Vitest for unit tests
-- fast-check for property-based testing
+### Testing
+- **Vitest** - Test runner
+- **React Testing Library** - Component testing
+- **fast-check** - Property-based testing
+- **Supertest** - API endpoint testing
 
 ## Database Schema
 
-The application uses the following tables:
-- `users` - User authentication and profiles
-- `transactions` - Money transfers between users
-- `leave_records` - Employee leave tracking
-- `public_holidays` - National holidays
-- `closed_dates` - Company closure periods
-- `birthdays` - Employee birthdays
+### Core Tables
 
-All tables use UUID primary keys and include `created_at` and `updated_at` timestamps with automatic triggers.
+- `users` - User authentication and profiles
+- `sales_transactions` - Sales records with item, price, quantity, seller
+- `debt_transactions_v2` - Debt tracking between Lev, Danik, and 2masters
+- `leave_records` - Employee leave tracking
+- `public_holidays` - National and regional holidays
+- `closed_dates` - Company closure periods
+- `birthdays` - Employee birthday tracking
+
+All tables use UUID primary keys and include `created_at` and `updated_at` timestamps.
+
+### Key Indexes
+
+- `idx_sales_date` - Sales by date (DESC)
+- `idx_sales_seller` - Sales by seller
+- `idx_debt_timestamp` - Debt by timestamp (DESC)
+- `idx_leave_dates` - Leave by date range
+- `idx_holiday_date` - Holidays by date
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/me` - Get current user
+- `POST /api/auth/verify-2fa` - Verify 2FA code
+- `POST /api/auth/setup-2fa` - Setup 2FA
+- `POST /api/auth/enable-2fa` - Enable 2FA
+- `POST /api/auth/disable-2fa` - Disable 2FA
+
+### Sales Transactions
+- `GET /api/sales` - List sales (paginated)
+- `POST /api/sales` - Create sale
+- `PUT /api/sales/:id` - Update sale
+- `DELETE /api/sales/:id` - Delete sale
+
+### Debt Transactions
+- `GET /api/debt-transactions-v2` - List transactions (paginated)
+- `POST /api/debt-transactions-v2` - Create transaction
+- `GET /api/debt-transactions-v2/net-debt` - Get net debt
+- `PUT /api/debt-transactions-v2/:id` - Update transaction
+- `DELETE /api/debt-transactions-v2/:id` - Delete transaction
+
+### Leave Management
+- `GET /api/leave` - List leave records (paginated)
+- `POST /api/leave` - Create leave
+- `PUT /api/leave/:id` - Update leave
+- `DELETE /api/leave/:id` - Delete leave
+- `POST /api/leave/calculate-business-days` - Calculate business days
+- `POST /api/leave/check-overlap` - Check for overlaps
+
+### Settings
+- `GET /api/holidays` - List holidays
+- `POST /api/holidays` - Create holiday
+- `PUT /api/holidays/:id` - Update holiday
+- `DELETE /api/holidays/:id` - Delete holiday
+- `GET /api/closed-dates` - List closed dates
+- `POST /api/closed-dates` - Create closed date
+- `PUT /api/closed-dates/:id` - Update closed date
+- `DELETE /api/closed-dates/:id` - Delete closed date
+- `GET /api/birthdays` - List birthdays
+- `POST /api/birthdays` - Create birthday
+- `PUT /api/birthdays/:id` - Update birthday
+- `DELETE /api/birthdays/:id` - Delete birthday
+
+### User Management
+- `GET /api/users` - List users
+- `PUT /api/users/:id` - Update user
+- `POST /api/users/:id/set-pin` - Set user PIN
+
+## Testing
+
+Run all tests:
+```bash
+npm test
+```
+
+Run tests with coverage:
+```bash
+cd frontend && npm run test:coverage
+cd backend && npm run test:coverage
+```
+
+Run tests in watch mode:
+```bash
+npm run test:watch
+```
 
 ## Timezone Configuration
 
-The application uses a single consistent timezone (configurable via `DB_TIMEZONE` environment variable) for all date operations to ensure consistency across the system.
+The application uses a single consistent timezone (configurable via `DB_TIMEZONE` environment variable, default: `Australia/Melbourne`) for all date operations to ensure consistency across the system.
+
+## Production Deployment
+
+### Build for Production
+
+```bash
+# Frontend
+cd frontend
+npm run build
+# Output: dist/
+
+# Backend
+cd backend
+npm run build
+# Output: dist/
+```
+
+### Environment Variables
+
+Set `NODE_ENV=production` and use strong secrets for `SESSION_SECRET`.
+
+### Database Migration
+
+```bash
+cd backend
+npm run migrate
+```
+
+## Documentation
+
+- [APPLICATION_OVERVIEW_README.md](APPLICATION_OVERVIEW_README.md) - Complete application documentation
+- [SALES_TRACKER_README.md](SALES_TRACKER_README.md) - Sales tracker features and API
+- [DEBT_TRACKER_README.md](DEBT_TRACKER_README.md) - Debt tracker features and API
+- [LEAVE_TRACKER_README.md](LEAVE_TRACKER_README.md) - Leave tracker features and API
+- [SETTINGS_README.md](SETTINGS_README.md) - Settings and authentication
+
+## License
+
+[Your License Here]
+
+## Support
+
+For issues and questions, please refer to the detailed documentation in the README files listed above.

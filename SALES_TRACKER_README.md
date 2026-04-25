@@ -269,11 +269,15 @@ CREATE INDEX idx_sales_item ON sales_transactions(LOWER(item));
 
 ## Future Enhancements
 
-- Export to CSV/Excel
-- Date range filtering
-- Seller comparison reports
-- Profit margin tracking
+- Export to CSV/Excel with custom date ranges
+- Advanced date range filtering
+- Seller comparison reports and analytics
+- Profit margin tracking and analysis
 - Inventory integration
 - Receipt photo attachments
-- Bulk import functionality
-- Advanced analytics dashboard
+- Bulk import functionality from CSV
+- Advanced analytics dashboard with charts
+- Sales forecasting
+- Customer tracking
+- Discount and promotion tracking
+- Tax calculation and reporting

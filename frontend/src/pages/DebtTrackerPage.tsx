@@ -15,8 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 import TransactionForm from '../components/TransactionForm';
 import DebtDisplay from '../components/DebtDisplay';
 import TransactionHistory from '../components/TransactionHistory';
-import EditTransactionDialog from '../components/EditTransactionDialog';
-import { getDebtTransactions, DebtTransaction } from '../api/debtTrackerApi';
+import { DebtTransaction } from '../api/debtTrackerApi';
 
 const DebtTrackerPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,10 +26,6 @@ const DebtTrackerPage: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  
-  // Edit dialog state
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [transactionToEdit, setTransactionToEdit] = useState<DebtTransaction | null>(null);
 
   const fetchTransactions = async (append: boolean = false) => {
     console.log('🔄 Fetching transactions with pagination:', { append, currentCount: transactions.length });
@@ -104,20 +99,6 @@ const DebtTrackerPage: React.FC = () => {
     setRefreshKey((prev) => prev + 1);
   };
 
-  const handleEdit = (transaction: DebtTransaction) => {
-    setTransactionToEdit(transaction);
-    setEditDialogOpen(true);
-  };
-
-  const handleCloseEditDialog = () => {
-    setEditDialogOpen(false);
-    setTransactionToEdit(null);
-  };
-
-  const handleTransactionUpdated = () => {
-    setRefreshKey((prev) => prev + 1);
-  };
-
   return (
     <Box sx={{ flexGrow: 1 }}>
       {/* Top bar */}
@@ -175,7 +156,6 @@ const DebtTrackerPage: React.FC = () => {
             loading={loading}
             error={error}
             onTransactionUpdate={handleTransactionUpdate}
-            onEdit={handleEdit}
           />
           
           {/* Load More Button */}
@@ -192,14 +172,6 @@ const DebtTrackerPage: React.FC = () => {
           )}
         </Box>
       </Container>
-
-      {/* Edit Transaction Dialog */}
-      <EditTransactionDialog
-        open={editDialogOpen}
-        transaction={transactionToEdit}
-        onClose={handleCloseEditDialog}
-        onTransactionUpdated={handleTransactionUpdated}
-      />
     </Box>
   );
 };

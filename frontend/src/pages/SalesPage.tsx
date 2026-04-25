@@ -4,11 +4,10 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchSales, SalesTransaction } from '../api/salesApi';
+import { SalesTransaction } from '../api/salesApi';
 import AddSalesTransactionForm from '../components/AddSalesTransactionForm';
 import SalesTransactionList from '../components/SalesTransactionList';
 import ItemFilter from '../components/ItemFilter';
-import EditSalesTransactionDialog from '../components/EditSalesTransactionDialog';
 import { filterByItem } from '../utils/salesUtils';
 
 interface TabPanelProps {
@@ -41,8 +40,6 @@ const SalesPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [editingTransaction, setEditingTransaction] = useState<SalesTransaction | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleBack = () => {
     navigate('/');
@@ -116,16 +113,6 @@ const SalesPage: React.FC = () => {
     loadTransactions(false);
     // Show success feedback
     setSuccessMessage('Sales transaction updated successfully!');
-  };
-
-  const handleEdit = (transaction: SalesTransaction) => {
-    setEditingTransaction(transaction);
-    setEditDialogOpen(true);
-  };
-
-  const handleCloseEditDialog = () => {
-    setEditDialogOpen(false);
-    setEditingTransaction(null);
   };
 
   const handleFilterChange = (filter: string) => {
@@ -211,7 +198,6 @@ const SalesPage: React.FC = () => {
             loading={loading}
             error={error}
             onTransactionUpdate={handleTransactionUpdate}
-            onEdit={handleEdit}
           />
           
           {/* Load More Button */}
@@ -250,14 +236,6 @@ const SalesPage: React.FC = () => {
           {successMessage}
         </Alert>
       </Snackbar>
-
-      {/* Edit Transaction Dialog */}
-      <EditSalesTransactionDialog
-        open={editDialogOpen}
-        transaction={editingTransaction}
-        onClose={handleCloseEditDialog}
-        onTransactionUpdated={handleTransactionUpdate}
-      />
     </Box>
   );
 };

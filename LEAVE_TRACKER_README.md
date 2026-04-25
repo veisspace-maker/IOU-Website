@@ -409,13 +409,16 @@ All dates are handled in the configured timezone (default: Australia/Melbourne):
 
 ## Future Enhancements
 
-- Leave balance tracking
+- Leave balance tracking per employee
 - Annual leave allowance management
 - Leave approval workflow
-- Email notifications
-- Calendar export (iCal)
-- Leave type categorization (annual, sick, personal)
+- Email notifications for leave requests
+- Calendar export (iCal format)
+- Leave type categorization (annual, sick, personal, unpaid)
 - Half-day leave support
 - Team leave calendar view
-- Leave request comments
+- Leave request comments and notes
 - Manager approval system
+- Leave balance reports
+- Carry-over leave tracking
+- Leave accrual calculations

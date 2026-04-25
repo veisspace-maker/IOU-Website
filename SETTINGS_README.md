@@ -34,6 +34,7 @@ The Settings module provides centralized management for user accounts, security 
 2. **Public Holidays**: National and regional holidays
 3. **Closed Dates**: Company closure periods
 4. **Birthdays**: Employee birthday tracking
+5. **Notifications**: Birthday notification preferences
 
 ## Account Settings
 
@@ -203,6 +204,7 @@ Delete a closed date period.
 - View upcoming birthdays
 - Age calculation (automatic)
 - Birthday banner on home page
+- Configurable birthday notifications
 
 ### Birthday Data Model
 ```typescript
@@ -214,6 +216,22 @@ Birthday {
   updatedAt: Date
 }
 ```
+
+### Birthday Notifications
+
+The application supports browser notifications for birthdays:
+
+- **Enable/Disable**: Toggle notifications in Settings → Notifications
+- **Permission**: Browser will request notification permission when enabled
+- **Timing**: Notifications appear on the actual birthday
+- **Frequency**: Once per day per birthday
+- **Persistence**: Preference stored in browser localStorage
+
+**Notification Settings:**
+- Managed in Settings → Notifications tab
+- Requires browser notification permission
+- Works when application is open in browser
+- Shows person's name and age
 
 ### API Endpoints
 
@@ -523,15 +541,23 @@ CREATE TABLE birthdays (
 4. Select date of birth
 5. Click "Save"
 
+### Configuring Birthday Notifications
+1. Navigate to Settings → Notifications
+2. Toggle "Enable Birthday Notifications"
+3. Grant browser notification permission when prompted
+4. Notifications will appear on birthdays when app is open
+
 ## Future Enhancements
 
 - Role-based access control
 - Password reset via email
 - Account recovery options
 - Audit log for settings changes
-- Bulk holiday import
+- Bulk holiday import from external sources
 - Holiday templates by region
-- Birthday reminders
+- Birthday reminder emails
 - Custom calendar color schemes
 - Multi-language support
 - Dark mode
+- Export settings to file
+- Import settings from file

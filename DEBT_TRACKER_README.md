@@ -335,13 +335,15 @@ This ensures financial records stay synchronized.
 
 ## Future Enhancements
 
-- Transaction categories
+- Transaction categories and tags
 - Recurring transactions
-- Payment reminders
-- Export to CSV
-- Transaction search
+- Payment reminders and notifications
+- Export to CSV/Excel
+- Transaction search and filtering
 - Date range filtering
 - Multi-currency support
 - Receipt attachments
-- Settlement history
-- Analytics dashboard
+- Settlement history tracking
+- Analytics dashboard with charts
+- Transaction notes and comments
+- Bulk transaction import

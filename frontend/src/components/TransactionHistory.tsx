@@ -7,7 +7,6 @@ import {
   Paper,
   CircularProgress,
   Divider,
-  IconButton,
   Button,
   Dialog,
   DialogTitle,
@@ -15,21 +14,22 @@ import {
   DialogActions,
   TextField,
   InputAdornment,
+  Collapse,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
-import { DebtTransaction, deleteDebtTransaction } from '../api/debtTrackerApi';
-import { formatEntityName, formatCurrency, formatTimestamp } from '../utils/debtTrackerUtils';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { DebtTransaction, deleteDebtTransaction, updateDebtTransaction, CreateDebtTransactionData } from '../api/debtTrackerApi';
+import { formatEntityName, formatCurrency, formatTimestamp, Entity } from '../utils/debtTrackerUtils';
 import { useScrollPreservation } from '../hooks/useScrollPreservation';
+import EntitySelector from './EntitySelector';
 
 interface TransactionHistoryProps {
   transactions: DebtTransaction[];
   loading: boolean;
   error: string | null;
   onTransactionUpdate: () => void;
-  onEdit: (transaction: DebtTransaction) => void;
 }
 
 const TransactionHistory: React.FC<TransactionHistoryProps> = ({
@@ -37,10 +37,22 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   loading,
   error,
   onTransactionUpdate,
-  onEdit,
 }) => {
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Expanded transaction state
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Edit form state
+  const [senderEntity, setSenderEntity] = useState<Entity | null>(null);
+  const [receiverEntity, setReceiverEntity] = useState<Entity | null>(null);
+  const [amount, setAmount] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [date, setDate] = useState<string>('');
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // Delete confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -114,7 +126,25 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   // Scroll preservation
   const scrollContainerRef = useScrollPreservation([filteredTransactions]);
 
-  const handleDeleteClick = (transaction: DebtTransaction) => {
+  const handleTransactionClick = (transaction: DebtTransaction) => {
+    if (expandedId === transaction.id) {
+      // Collapse if already expanded
+      setExpandedId(null);
+    } else {
+      // Expand and populate form
+      setExpandedId(transaction.id);
+      setSenderEntity(transaction.from);
+      setReceiverEntity(transaction.to);
+      setAmount(transaction.amount.toString());
+      setDescription(transaction.description || '');
+      const transactionDate = new Date(transaction.timestamp);
+      setDate(transactionDate.toISOString().split('T')[0]);
+      setShowError(false);
+    }
+  };
+
+  const handleDeleteClick = (transaction: DebtTransaction, e: React.MouseEvent) => {
+    e.stopPropagation();
     setTransactionToDelete(transaction);
     setDeleteDialogOpen(true);
   };
@@ -133,6 +163,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       
       setDeleteDialogOpen(false);
       setTransactionToDelete(null);
+      setExpandedId(null);
       onTransactionUpdate();
     } catch (err: any) {
       console.error('Error deleting debt transaction:', err);
@@ -141,6 +172,74 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       setDeleting(false);
     }
   };
+
+  const handleSaveEdit = async () => {
+    const transaction = transactions.find(t => t.id === expandedId);
+    if (!transaction) return;
+
+    // Validate sender entity
+    if (!senderEntity) {
+      setErrorMessage('Please select a sender entity');
+      setShowError(true);
+      return;
+    }
+
+    // Validate receiver entity
+    if (!receiverEntity) {
+      setErrorMessage('Please select a receiver entity');
+      setShowError(true);
+      return;
+    }
+
+    // Validate amount
+    const amountValue = parseFloat(amount);
+
+    if (isNaN(amountValue) || amountValue <= 0) {
+      setErrorMessage('Amount must be a positive number greater than zero');
+      setShowError(true);
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      // Convert date to timestamp (start of day in local timezone)
+      const selectedDate = new Date(date + 'T00:00:00');
+      const timestamp = selectedDate.getTime();
+
+      // Prepare data for API
+      const transactionData: CreateDebtTransactionData = {
+        from: senderEntity,
+        to: receiverEntity,
+        amount: amountValue,
+        timestamp,
+        description: description.trim() || undefined,
+      };
+
+      // Update debt transaction
+      await updateDebtTransaction(transaction.id, transactionData);
+
+      // Close dropdown and notify parent
+      setExpandedId(null);
+      onTransactionUpdate();
+    } catch (error: any) {
+      console.error('Error updating debt transaction:', error);
+      setErrorMessage(error.message || 'Failed to update debt transaction');
+      setShowError(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCloseError = () => {
+    setShowError(false);
+  };
+
+  const isFormValid =
+    senderEntity !== null &&
+    receiverEntity !== null &&
+    amount.trim() !== '' &&
+    parseFloat(amount) > 0;
 
   if (loading) {
     return (
@@ -237,6 +336,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
             const fromName = formatEntityName(transaction.from);
             const toName = formatEntityName(transaction.to);
             const formattedAmount = formatCurrency(transaction.amount);
+            const isExpanded = expandedId === transaction.id;
 
             return (
               <React.Fragment key={transaction.id}>
@@ -245,9 +345,14 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                     display: 'block',
                     py: { xs: 2.5, sm: 2 },
                     px: { xs: 1.5, sm: 2 },
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'action.hover',
+                    },
                   }}
+                  onClick={() => handleTransactionClick(transaction)}
                 >
-                  {/* Header: Date and Actions */}
+                  {/* Header: Date and Expand Icon */}
                   <Box sx={{ 
                     display: 'flex', 
                     alignItems: 'center', 
@@ -263,26 +368,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                       {formattedDate}
                     </Typography>
 
-                    {/* Action Buttons */}
-                    <Box sx={{ display: 'flex', gap: 0.5, ml: 'auto', flexShrink: 0 }}>
-                      <IconButton
-                        size="small"
-                        onClick={() => onEdit(transaction)}
-                        sx={{ padding: { xs: '6px', sm: '8px' } }}
-                        aria-label="edit"
-                      >
-                        <EditIcon sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }} />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteClick(transaction)}
-                        color="error"
-                        sx={{ padding: { xs: '6px', sm: '8px' } }}
-                        aria-label="delete"
-                      >
-                        <DeleteIcon sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }} />
-                      </IconButton>
-                    </Box>
+                    {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                   </Box>
 
                   {/* Transaction Details: From -> To */}
@@ -344,6 +430,99 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                       {transaction.description}
                     </Typography>
                   )}
+
+                  {/* Expanded Edit Form */}
+                  <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                    <Box 
+                      sx={{ 
+                        mt: 3, 
+                        pt: 3, 
+                        borderTop: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Typography variant="h6" sx={{ mb: 2, fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
+                        Edit Transaction
+                      </Typography>
+
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <EntitySelector
+                          senderEntity={senderEntity}
+                          receiverEntity={receiverEntity}
+                          onSenderSelect={setSenderEntity}
+                          onReceiverSelect={setReceiverEntity}
+                        />
+
+                        <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+                          <TextField
+                            label="Amount ($)"
+                            type="number"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            fullWidth
+                            inputProps={{ min: 0, step: 0.01 }}
+                            required
+                          />
+                          <TextField
+                            label="Date"
+                            type="date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            fullWidth
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                            required
+                          />
+                        </Box>
+
+                        <TextField
+                          label="Description (Optional)"
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          fullWidth
+                          placeholder="e.g., Dinner, Rent, Groceries"
+                          multiline
+                          rows={2}
+                        />
+
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(transaction, e);
+                            }}
+                            color="error"
+                            disabled={submitting}
+                          >
+                            Delete
+                          </Button>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedId(null);
+                            }}
+                            disabled={submitting}
+                            sx={{ color: 'text.secondary' }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSaveEdit();
+                            }}
+                            variant="contained"
+                            color="primary"
+                            disabled={submitting || !isFormValid}
+                          >
+                            {submitting ? 'Saving...' : 'Save Changes'}
+                          </Button>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Collapse>
                 </ListItem>
                 {index < filteredTransactions.length - 1 && <Divider />}
               </React.Fragment>
@@ -368,6 +547,19 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           </Button>
           <Button onClick={handleConfirmDelete} color="error" variant="contained" disabled={deleting}>
             {deleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Error Dialog */}
+      <Dialog open={showError} onClose={handleCloseError}>
+        <DialogTitle>Error</DialogTitle>
+        <DialogContent>
+          <Typography>{errorMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseError} color="primary">
+            OK
           </Button>
         </DialogActions>
       </Dialog>
