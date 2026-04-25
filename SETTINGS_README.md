@@ -16,10 +16,15 @@ The Settings module provides centralized management for user accounts, security 
 - Profile information
 
 ### Calendar Settings
-- Public holidays management
+- Public holidays management with bulk import
 - Company closed dates tracking
-- Birthday tracking
+- Birthday tracking with notifications
 - Calendar color customization
+
+### Sales Settings
+- Sales items management
+- Predefined item list for quick selection
+- Item name editing and deletion
 
 ### Security Features
 - Password strength validation
@@ -31,10 +36,11 @@ The Settings module provides centralized management for user accounts, security 
 
 ### Settings Page Tabs
 1. **Account**: User profile and security settings
-2. **Public Holidays**: National and regional holidays
+2. **Public Holidays**: National and regional holidays with bulk import
 3. **Closed Dates**: Company closure periods
 4. **Birthdays**: Employee birthday tracking
 5. **Notifications**: Birthday notification preferences
+6. **Sales Items**: Manage predefined sales items
 
 ## Account Settings
 
@@ -69,11 +75,21 @@ The Settings module provides centralized management for user accounts, security 
 ## Public Holidays Management
 
 ### Features
-- Add new public holidays
+- Add new public holidays manually
+- Bulk import holidays from external API
 - Edit existing holidays
 - Delete holidays
 - View all holidays in chronological order
 - Automatic integration with leave calculations
+- Import by country and year
+
+### Holiday Import
+- Import holidays from Nager.Date API
+- Select country from dropdown list
+- Choose year for import
+- Automatic duplicate detection
+- Filters out non-public holidays (observances)
+- Batch import with status reporting
 
 ### Holiday Data Model
 ```typescript
@@ -123,11 +139,42 @@ Update a public holiday.
 #### DELETE /api/holidays/:id
 Delete a public holiday.
 
-### Holiday Import
-- Bulk import from external sources
-- CSV import support
-- Validation before import
-- Duplicate detection
+#### POST /api/holiday-import/import
+Bulk import holidays from external API.
+
+**Request Body:**
+```json
+{
+  "year": 2026,
+  "countryCode": "AU"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Holiday import completed",
+  "inserted": 10,
+  "skipped": 2,
+  "insertedHolidays": [ /* array of inserted holidays */ ],
+  "skippedHolidays": [ /* array with skip reasons */ ]
+}
+```
+
+#### GET /api/holiday-import/countries
+Get list of available countries for import.
+
+**Response:**
+```json
+{
+  "countries": [
+    {
+      "countryCode": "AU",
+      "name": "Australia"
+    }
+  ]
+}
+```
 
 ## Closed Dates Management
 
@@ -275,6 +322,78 @@ Delete a birthday record.
 - Upcoming birthday notifications
 - Birthday banner on home page (shows on actual birthday)
 - Sorted by upcoming birthdays
+
+## Sales Items Management
+
+### Features
+- Add predefined sales items
+- Edit item names
+- Delete unused items
+- Alphabetically sorted display
+- Duplicate prevention
+- Quick selection in sales transactions
+
+### Sales Item Data Model
+```typescript
+SalesItem {
+  id: string              // UUID
+  name: string            // Item name (unique)
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### API Endpoints
+
+#### GET /api/sales-items
+List all sales items.
+
+**Response:**
+```json
+{
+  "items": [
+    {
+      "id": "uuid",
+      "name": "Coffee",
+      "createdAt": "2026-04-23T10:00:00Z",
+      "updatedAt": "2026-04-23T10:00:00Z"
+    }
+  ]
+}
+```
+
+#### POST /api/sales-items
+Create a new sales item.
+
+**Request Body:**
+```json
+{
+  "name": "Coffee"
+}
+```
+
+**Error Codes:**
+- `400`: Item name is required
+- `409`: Item with this name already exists
+
+#### PUT /api/sales-items/:id
+Update a sales item.
+
+**Request Body:**
+```json
+{
+  "name": "Espresso"
+}
+```
+
+#### DELETE /api/sales-items/:id
+Delete a sales item.
+
+### Common Use Cases
+- Add frequently sold items for quick selection
+- Standardize item names across transactions
+- Reduce typing when creating sales
+- Maintain consistent naming conventions
 
 ## Authentication System
 
@@ -447,6 +566,13 @@ CREATE TABLE birthdays (
   created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE sales_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
 ## Security Best Practices
@@ -547,17 +673,34 @@ CREATE TABLE birthdays (
 3. Grant browser notification permission when prompted
 4. Notifications will appear on birthdays when app is open
 
+### Importing Public Holidays
+1. Navigate to Settings → Public Holidays
+2. Click "Import Holidays"
+3. Select country from dropdown
+4. Enter year
+5. Click "Import"
+6. Review import results (inserted and skipped)
+
+### Managing Sales Items
+1. Navigate to Settings → Sales Items
+2. Click "Add Item"
+3. Enter item name
+4. Click "Add"
+5. Edit or delete items as needed
+
 ## Future Enhancements
 
 - Role-based access control
 - Password reset via email
 - Account recovery options
 - Audit log for settings changes
-- Bulk holiday import from external sources
-- Holiday templates by region
-- Birthday reminder emails
+- Holiday templates by region/state
+- Birthday reminder emails and SMS
 - Custom calendar color schemes
 - Multi-language support
 - Dark mode
-- Export settings to file
-- Import settings from file
+- Export/import settings
+- Bulk sales item import from CSV
+- Sales item categories and tags
+- Item price history tracking
+- Automated holiday updates

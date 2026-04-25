@@ -196,7 +196,7 @@ const EditSalesTransactionDialog: React.FC<EditSalesTransactionDialogProps> = ({
               placeholder="e.g., Product A, Service B"
             />
             
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
               <TextField
                 label="Total Price ($)"
                 type="number"
@@ -217,7 +217,7 @@ const EditSalesTransactionDialog: React.FC<EditSalesTransactionDialogProps> = ({
                 type="number"
                 value={quantity}
                 onChange={handleQuantityChange}
-                sx={{ width: '150px' }}
+                sx={{ width: { xs: '100%', sm: '150px' } }}
                 inputProps={{ min: 1, step: 1 }}
                 required
               />

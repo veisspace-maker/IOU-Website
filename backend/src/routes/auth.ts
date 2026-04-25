@@ -34,7 +34,7 @@ router.post('/login', (req: Request, res: Response, next: NextFunction) => {
     // Check if 2FA is enabled
     if (user.twoFactorEnabled) {
       // Store user temporarily in session for 2FA verification
-      req.session.pendingUser = user;
+      (req.session as any).pendingUser = user;
       return res.json({ 
         requiresTwoFactor: true,
         message: 'Please provide 2FA code'

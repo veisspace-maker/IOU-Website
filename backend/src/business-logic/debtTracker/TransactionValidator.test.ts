@@ -10,7 +10,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { validate } from './TransactionValidator';
-import type { Transaction } from '../../types/debtTrackerV2';
+import type { Transaction } from '../../types/debtTracker';
 
 describe('TransactionValidator', () => {
   describe('validate', () => {

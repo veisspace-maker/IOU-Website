@@ -12,10 +12,12 @@ A comprehensive business management system for tracking sales, debts, employee l
 
 ## Features
 
-- **Sales Tracker**: Record and analyze sales with item-level insights and seller attribution
+- **Sales Tracker**: Record and analyze sales with item-level insights, seller attribution, and predefined items
 - **Debt Tracker**: Track money owed between Lev and Danik with automatic calculations
 - **Leave Tracker**: Manage employee leave with intelligent business day calculations
-- **Settings**: Configure users, holidays, closed dates, and birthdays
+- **Settings**: Configure users, holidays (with bulk import), closed dates, birthdays, and sales items
+- **PWA Support**: Install as app on mobile/desktop with offline support and auto-updates
+- **Birthday Notifications**: Browser notifications for employee birthdays
 
 ## Project Structure
 
@@ -198,9 +200,10 @@ npx tsx src/scripts/scriptName.ts
 - **Material-UI (MUI) v5** - UI components
 - **Redux Toolkit** - State management
 - **React Router v6** - Routing
-- **Vite** - Build tool
+- **Vite** - Build tool with PWA plugin
 - **date-fns** - Date handling
 - **Axios** - HTTP client
+- **Workbox** - Service worker and caching
 
 ### Backend
 - **Express.js** with TypeScript
@@ -210,6 +213,7 @@ npx tsx src/scripts/scriptName.ts
 - **bcrypt** - Password hashing
 - **speakeasy** - Two-factor authentication (TOTP)
 - **date-fns-tz** - Timezone handling
+- **axios** - External API calls (holiday import)
 
 ### Testing
 - **Vitest** - Test runner
@@ -223,6 +227,7 @@ npx tsx src/scripts/scriptName.ts
 
 - `users` - User authentication and profiles
 - `sales_transactions` - Sales records with item, price, quantity, seller
+- `sales_items` - Predefined sales items for quick selection
 - `debt_transactions_v2` - Debt tracking between Lev, Danik, and 2masters
 - `leave_records` - Employee leave tracking
 - `public_holidays` - National and regional holidays
@@ -276,6 +281,8 @@ All tables use UUID primary keys and include `created_at` and `updated_at` times
 - `POST /api/holidays` - Create holiday
 - `PUT /api/holidays/:id` - Update holiday
 - `DELETE /api/holidays/:id` - Delete holiday
+- `POST /api/holiday-import/import` - Bulk import holidays
+- `GET /api/holiday-import/countries` - List available countries
 - `GET /api/closed-dates` - List closed dates
 - `POST /api/closed-dates` - Create closed date
 - `PUT /api/closed-dates/:id` - Update closed date
@@ -284,6 +291,10 @@ All tables use UUID primary keys and include `created_at` and `updated_at` times
 - `POST /api/birthdays` - Create birthday
 - `PUT /api/birthdays/:id` - Update birthday
 - `DELETE /api/birthdays/:id` - Delete birthday
+- `GET /api/sales-items` - List sales items
+- `POST /api/sales-items` - Create sales item
+- `PUT /api/sales-items/:id` - Update sales item
+- `DELETE /api/sales-items/:id` - Delete sales item
 
 ### User Management
 - `GET /api/users` - List users
@@ -311,6 +322,25 @@ npm run test:watch
 ## Timezone Configuration
 
 The application uses a single consistent timezone (configurable via `DB_TIMEZONE` environment variable, default: `Australia/Melbourne`) for all date operations to ensure consistency across the system.
+
+## PWA Features
+
+The application is a Progressive Web App (PWA) with:
+
+- **Installable**: Can be installed on mobile and desktop devices
+- **Offline Support**: Works offline after first visit with service worker caching
+- **Auto-Updates**: Automatically detects and prompts for updates
+- **Push Notifications**: Browser notifications for birthdays
+- **App-like Experience**: Custom icons, splash screens, and standalone mode
+
+To build and test PWA features:
+```bash
+cd frontend
+npm run build
+npm run preview
+```
+
+See [frontend/PWA_SETUP.md](frontend/PWA_SETUP.md) for detailed PWA configuration.
 
 ## Production Deployment
 

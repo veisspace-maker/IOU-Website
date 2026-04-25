@@ -411,7 +411,7 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
 
   if (loading) {
     return (
-      <Paper elevation={2} sx={{ p: 3 }}>
+      <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
           <CircularProgress />
         </Box>
@@ -421,7 +421,7 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
 
   if (error) {
     return (
-      <Paper elevation={2} sx={{ p: 3 }}>
+      <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
         <Typography color="error">{error}</Typography>
       </Paper>
     );
@@ -429,8 +429,8 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
 
   if (leaveRecords.length === 0) {
     return (
-      <Paper elevation={2} sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
+      <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
           Leave History
         </Typography>
         <Typography color="text.secondary">No leave records found</Typography>
@@ -440,18 +440,12 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
 
   return (
     <>
-      <Paper elevation={2} sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
+      <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
           Leave History
         </Typography>
 
-        <Box
-          ref={scrollContainerRef}
-          sx={{
-            maxHeight: '400px',
-            overflowY: 'auto',
-          }}
-        >
+        <Box ref={scrollContainerRef}>
           <List>
             {leaveRecords.map((leave) => {
               const isExpanded = expandedId === leave.id;
@@ -466,16 +460,17 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
                     '&:hover': {
                       backgroundColor: 'action.hover',
                     },
-                    py: 2,
+                    py: { xs: 1.5, sm: 2 },
+                    px: { xs: 1, sm: 2 },
                   }}
                   onClick={() => handleLeaveClick(leave)}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: '44px' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', flex: 1 }}>
-                      <Typography variant="body1" component="span" sx={{ fontWeight: 'bold' }}>
+                      <Typography variant="body1" component="span" sx={{ fontWeight: 'bold', fontSize: { xs: '0.938rem', sm: '1rem' } }}>
                         {userName}
                       </Typography>
-                      <Typography variant="body2" component="span" color="text.secondary">
+                      <Typography variant="body2" component="span" color="text.secondary" sx={{ fontSize: { xs: '0.813rem', sm: '0.875rem' } }}>
                         {format(new Date(leave.startDate), 'dd/MM/yyyy')} → {format(new Date(leave.endDate), 'dd/MM/yyyy')}
                       </Typography>
                       <Chip
@@ -483,6 +478,7 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
                         size="small"
                         color="primary"
                         variant="outlined"
+                        sx={{ fontSize: { xs: '0.688rem', sm: '0.75rem' } }}
                       />
                     </Box>
                     {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -499,7 +495,7 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
                       }}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Typography variant="h6" sx={{ mb: 2 }}>
+                      <Typography variant="h6" sx={{ mb: 2, fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
                         Leave Details
                       </Typography>
 

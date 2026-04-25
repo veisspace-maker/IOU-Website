@@ -14,6 +14,15 @@ The Sales Tracker allows you to record and analyze sales transactions with detai
 - Add optional descriptions for context
 - Assign transactions to sellers (Leva or Danik)
 - Automatic pagination (50 transactions per page)
+- Automatic debt transaction creation on sale
+- Quick item selection from predefined list
+
+### Sales Items Management
+- Create and manage reusable sales items
+- Quick item selection dropdown in transaction form
+- Edit and delete sales items
+- Alphabetically sorted item list
+- Prevents duplicate item names
 
 ### Analytics & Reporting
 - Item-level statistics and breakdowns
@@ -25,10 +34,12 @@ The Sales Tracker allows you to record and analyze sales transactions with detai
 
 ### Smart Features
 - Case-insensitive item name grouping
-- Automatic debt transaction creation on sale
+- Automatic debt transaction creation on sale (2masters → seller)
 - Default quantity of 1 for quick entry
 - Date-based sorting (newest first)
 - Real-time statistics updates
+- Quantity-based revenue calculations
+- Item filtering and search
 
 ## User Interface
 
@@ -44,25 +55,34 @@ The Sales Tracker allows you to record and analyze sales transactions with detai
 - Scroll position preservation during updates
 
 ### Add Transaction Form
-- Item name (required)
+- Item name (required) - dropdown with predefined items or free text
 - Price per unit (required, must be > 0)
-- Quantity (defaults to 1)
+- Quantity (defaults to 1, must be positive integer)
 - Date (defaults to today)
 - Seller selection (Leva or Danik)
 - Optional description field
 
+### Sales Items Manager
+- Accessible from Settings page
+- Add new items to dropdown list
+- Edit existing item names
+- Delete unused items
+- Alphabetically sorted display
+- Duplicate prevention
+
 ### Statistics View
 - Summary cards showing:
-  - Total revenue
-  - Total items sold
+  - Total revenue (sum of price × quantity)
+  - Total items sold (sum of quantities)
   - Average transaction value
   - Number of unique items
 - Item breakdown table with:
   - Item name
   - Total quantity sold
-  - Total revenue
+  - Total revenue (price × quantity summed)
   - Average price per unit
   - Number of transactions
+- Click item name for drill-down view
 
 ## Data Model
 
@@ -82,7 +102,9 @@ SalesTransaction {
 
 ## API Endpoints
 
-### GET /api/sales
+### Sales Transactions
+
+#### GET /api/sales
 List sales transactions with pagination.
 
 **Query Parameters:**
@@ -111,7 +133,7 @@ List sales transactions with pagination.
 }
 ```
 
-### POST /api/sales
+#### POST /api/sales
 Create a new sales transaction.
 
 **Request Body:**
@@ -134,7 +156,7 @@ Create a new sales transaction.
 }
 ```
 
-### PUT /api/sales/:id
+#### PUT /api/sales/:id
 Update an existing sales transaction.
 
 **Request Body:** Same as POST
@@ -147,13 +169,82 @@ Update an existing sales transaction.
 }
 ```
 
-### DELETE /api/sales/:id
+#### DELETE /api/sales/:id
 Delete a sales transaction.
 
 **Response:**
 ```json
 {
   "message": "Sales transaction deleted successfully"
+}
+```
+
+### Sales Items
+
+#### GET /api/sales-items
+List all sales items.
+
+**Response:**
+```json
+{
+  "items": [
+    {
+      "id": "uuid",
+      "name": "Coffee",
+      "createdAt": "2026-04-23T10:00:00Z",
+      "updatedAt": "2026-04-23T10:00:00Z"
+    }
+  ]
+}
+```
+
+#### POST /api/sales-items
+Create a new sales item.
+
+**Request Body:**
+```json
+{
+  "name": "Coffee"
+}
+```
+
+**Response:**
+```json
+{
+  "item": { /* item object */ },
+  "message": "Sales item created successfully"
+}
+```
+
+**Error Codes:**
+- `400`: Item name is required
+- `409`: Item with this name already exists
+
+#### PUT /api/sales-items/:id
+Update a sales item.
+
+**Request Body:**
+```json
+{
+  "name": "Espresso"
+}
+```
+
+**Response:**
+```json
+{
+  "item": { /* updated item */ },
+  "message": "Sales item updated successfully"
+}
+```
+
+#### DELETE /api/sales-items/:id
+Delete a sales item.
+
+**Response:**
+```json
+{
+  "message": "Sales item deleted successfully"
 }
 ```
 
@@ -177,7 +268,7 @@ When a sale is created:
 - **Total Revenue**: Sum of (price × quantity) for all transactions
 - **Total Items Sold**: Sum of all quantities
 - **Average Transaction**: Total revenue ÷ number of transactions
-- **Item Statistics**: Aggregated by normalized item name
+- **Item Statistics**: Aggregated by normalized item name, including total quantity sold
 
 ## Validation Rules
 
@@ -221,11 +312,19 @@ When a sale is created:
 
 ### Recording a Sale
 1. Navigate to Sales page
-2. Fill in item name and price
-3. Adjust quantity if needed (defaults to 1)
-4. Select seller
-5. Add optional description
-6. Click "Add Transaction"
+2. Select item from dropdown or type new item name
+3. Enter price per unit
+4. Adjust quantity if needed (defaults to 1)
+5. Select seller
+6. Add optional description
+7. Click "Add Transaction"
+
+### Managing Sales Items
+1. Navigate to Settings page
+2. Scroll to Sales Items Manager section
+3. Add new items for quick selection
+4. Edit item names as needed
+5. Delete unused items
 
 ### Viewing Item Performance
 1. Navigate to Sales page
@@ -246,6 +345,24 @@ When a sale is created:
 3. View filtered transactions
 4. Clear filter to see all
 
+## Integration with Debt Tracker
+
+When a sale is recorded:
+1. Sales Tracker creates the sale transaction with item, price, quantity, seller, and date
+2. Calculates total amount: `price × quantity`
+3. Automatically creates debt transaction: `2masters → seller` for the total amount
+4. Debt description includes: `Sale: {item} (Qty: {quantity} × {price} = {total}) - {description}`
+5. This represents that the seller received company money (including the other person's 50% share)
+6. The Debt Tracker applies 50/50 split logic to calculate who owes whom
+7. Net debt updates automatically
+
+**Example**: If Leva sells 3 widgets at $10 each:
+- Sales transaction: 3 widgets @ $10 = $30 by Leva
+- Debt transaction: `2masters → lev` for $30 with description "Sale: widget (Qty: 3 × 10.00 = 30.00)"
+- Debt calculation: Danik owes Lev $15 (his half of the company money)
+
+This ensures financial records stay synchronized between sales and debts.
+
 ## Database Schema
 
 ```sql
@@ -262,9 +379,17 @@ CREATE TABLE sales_transactions (
   updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE sales_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX idx_sales_date ON sales_transactions(date DESC);
 CREATE INDEX idx_sales_seller ON sales_transactions(seller);
 CREATE INDEX idx_sales_item ON sales_transactions(LOWER(item));
+CREATE INDEX idx_sales_items_name ON sales_items(LOWER(name));
 ```
 
 ## Future Enhancements

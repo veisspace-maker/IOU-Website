@@ -274,11 +274,57 @@ const LeaveEntryForm: React.FC<LeaveEntryFormProps> = ({
     await submitLeave();
   };
 
-  const handleMerge = () => {
-    // For MVP, we'll just keep separate
-    // Full merge logic would require more complex date range merging
-    setShowOverlapDialog(false);
-    setError('Merge functionality not yet implemented. Please adjust dates or keep separate.');
+  const handleMerge = async () => {
+    if (!startDate || !endDate || overlappingLeave.length === 0) return;
+
+    try {
+      setSubmitting(true);
+      setShowOverlapDialog(false);
+
+      // Calculate the merged date range
+      const allDates = [
+        startDate,
+        endDate,
+        ...overlappingLeave.flatMap(leave => [
+          new Date(leave.startDate),
+          new Date(leave.endDate)
+        ])
+      ];
+
+      const mergedStartDate = new Date(Math.min(...allDates.map(d => d.getTime())));
+      const mergedEndDate = new Date(Math.max(...allDates.map(d => d.getTime())));
+
+      // Delete overlapping leave records
+      for (const leave of overlappingLeave) {
+        await axios.delete(`/api/leave/${leave.id}`, { withCredentials: true });
+      }
+
+      // Create new merged leave record
+      await axios.post(
+        '/api/leave',
+        {
+          userId: selectedPersonId,
+          startDate: mergedStartDate.toISOString(),
+          endDate: mergedEndDate.toISOString(),
+        },
+        { withCredentials: true }
+      );
+
+      // Reset form
+      setStartDate(null);
+      setEndDate(null);
+      setBusinessDays(null);
+      setError(null);
+      setOverlappingLeave([]);
+
+      // Notify parent
+      onLeaveCreated();
+    } catch (err: any) {
+      console.error('Error merging leave:', err);
+      setError(err.response?.data?.error || 'Failed to merge leave records');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Get label for leave type
@@ -289,8 +335,8 @@ const LeaveEntryForm: React.FC<LeaveEntryFormProps> = ({
   };
 
   return (
-    <Paper elevation={2} sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
+    <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+      <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
         Book Leave for {selectedPersonName}
       </Typography>
 
@@ -300,7 +346,7 @@ const LeaveEntryForm: React.FC<LeaveEntryFormProps> = ({
           </Alert>
         )}
 
-        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', flexDirection: { xs: 'column', sm: 'row' } }}>
           <DatePicker
             label="Start Date"
             value={startDate}
@@ -341,7 +387,7 @@ const LeaveEntryForm: React.FC<LeaveEntryFormProps> = ({
         )}
 
         {businessDays !== null && !calculating && (
-          <Typography variant="body1" sx={{ mb: 2, fontWeight: 'bold' }}>
+          <Typography variant="body1" sx={{ mb: 2, fontWeight: 'bold', fontSize: { xs: '0.938rem', sm: '1rem' } }}>
             {getLeaveLabel()}
           </Typography>
         )}

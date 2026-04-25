@@ -7,6 +7,8 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { store } from './store';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useBirthdayNotifications } from './hooks/useBirthdayNotifications';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
+import PWAUpdatePrompt from './components/PWAUpdatePrompt';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import DebtTrackerPage from './pages/DebtTrackerPage';
@@ -89,6 +91,8 @@ function App() {
           <BrowserRouter>
             <AuthProvider>
               <AppContent />
+              <PWAInstallPrompt />
+              <PWAUpdatePrompt />
             </AuthProvider>
           </BrowserRouter>
         </ThemeProvider>

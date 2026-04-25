@@ -228,7 +228,7 @@ const BirthdaysManager: React.FC = () => {
           }}
         />
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
           <Button
             variant="contained"
             onClick={handleSubmit}

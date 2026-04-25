@@ -12,12 +12,13 @@ import holidayImportRoutes from './routes/holidayImport';
 import closedDatesRoutes from './routes/closedDates';
 import birthdaysRoutes from './routes/birthdays';
 import salesTransactionsRoutes from './routes/salesTransactions';
+import salesItemsRoutes from './routes/salesItems';
 import debtTransactionsV2Routes from './routes/debtTransactionsV2';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = parseInt(process.env.PORT || '3001', 10);
 
 // Middleware
 app.use(cors({
@@ -84,6 +85,9 @@ app.use('/api/birthdays', birthdaysRoutes);
 
 // Sales transaction routes
 app.use('/api/sales', salesTransactionsRoutes);
+
+// Sales items routes
+app.use('/api/sales-items', salesItemsRoutes);
 
 // Debt transaction v2 routes
 app.use('/api/debt-transactions-v2', debtTransactionsV2Routes);

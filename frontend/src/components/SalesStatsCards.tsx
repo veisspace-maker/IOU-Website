@@ -35,11 +35,11 @@ const SalesStatsCards: React.FC<SalesStatsCardsProps> = ({ transactions }) => {
           },
         }}
       >
-        <CardContent>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontSize: { xs: '0.813rem', sm: '0.875rem' } }}>
             Total Revenue
           </Typography>
-          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2e7d32', fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
             ${totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </Typography>
         </CardContent>
@@ -58,11 +58,11 @@ const SalesStatsCards: React.FC<SalesStatsCardsProps> = ({ transactions }) => {
           },
         }}
       >
-        <CardContent>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontSize: { xs: '0.813rem', sm: '0.875rem' } }}>
             Total Items Sold
           </Typography>
-          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1976d2', fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
             {totalItemsSold}
           </Typography>
         </CardContent>

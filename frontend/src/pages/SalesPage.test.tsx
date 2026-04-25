@@ -281,6 +281,8 @@ describe('SalesPage', () => {
       id: 'test-id-1',
       item: 'Test Item',
       price: 100,
+      quantity: 1,
+      seller: 'seller1',
       date: '2024-01-15',
       description: 'Test description',
       createdBy: 'test-user-id',
@@ -375,7 +377,9 @@ describe('SalesPage', () => {
         expect(salesApi.updateSale).toHaveBeenCalledWith('test-id-1', {
           item: 'Updated Item',
           price: 150,
-          date: '2024-01-15',
+      quantity: 1,
+      seller: 'seller1',
+      date: '2024-01-15',
           description: 'Test description',
         });
       });

@@ -232,6 +232,8 @@ describe('Property-Based Tests: Sales Transactions', () => {
             id: row.id,
             item: row.item,
             price: parseFloat(row.price),
+            quantity: row.quantity || 1,
+            seller: row.seller || 'unknown',
             date: row.date,
             description: row.description,
             createdBy: row.created_by,
@@ -320,6 +322,8 @@ describe('Property-Based Tests: Sales Transactions', () => {
               id,
               item: trimmedItem,
               price: input.price,
+              quantity: 1,
+              seller: 'seller1',
               date: input.date,
               description: input.description || null,
               createdBy: userId,
@@ -396,3 +400,4 @@ describe('Property-Based Tests: Sales Transactions', () => {
     );
   });
 });
+

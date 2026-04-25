@@ -44,8 +44,7 @@ describe('calculateItemStats', () => {
   const createTransaction = (item: string, price: number, id: string = '1'): SalesTransaction => ({
     id,
     item,
-    price,
-    date: '2024-01-01',
+    price,`n    quantity: 1,`n    date: '2024-01-01',
     description: null,
     createdBy: 'user1',
   });
@@ -165,8 +164,7 @@ describe('filterByItem', () => {
   const createTransaction = (item: string, price: number, id: string = '1'): SalesTransaction => ({
     id,
     item,
-    price,
-    date: '2024-01-01',
+    price,`n    quantity: 1,`n    date: '2024-01-01',
     description: null,
     createdBy: 'user1',
   });
@@ -246,3 +244,6 @@ describe('filterByItem', () => {
     expect(filtered).toHaveLength(3);
   });
 });
+
+
+

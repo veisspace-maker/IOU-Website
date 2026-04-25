@@ -400,7 +400,7 @@ const ClosedDatesManager: React.FC = () => {
           sx={{ mb: 2 }}
         />
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
           <Button
             variant="contained"
             onClick={handleSubmit}

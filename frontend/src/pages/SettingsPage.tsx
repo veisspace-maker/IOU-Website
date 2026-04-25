@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   AppBar,
@@ -17,12 +17,87 @@ import ClosedDatesManager from '../components/ClosedDatesManager';
 import PublicHolidaysManager from '../components/PublicHolidaysManager';
 import BirthdaysManager from '../components/BirthdaysManager';
 import NotificationSettings from '../components/NotificationSettings';
+import SalesItemsManager from '../components/SalesItemsManager';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  horizontalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
 }
+
+interface SettingsTab {
+  id: string;
+  label: string;
+  component: React.ReactNode;
+}
+
+interface SortableTabProps {
+  id: string;
+  label: string;
+  index: number;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+const SortableTab: React.FC<SortableTabProps> = ({ id, label, index, isActive, onClick }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  // Handle click separately from drag
+  const handleClick = (e: React.MouseEvent) => {
+    if (!isDragging) {
+      onClick();
+    }
+  };
+
+  return (
+    <Tab
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      label={label}
+      id={`settings-tab-${index}`}
+      value={index}
+      onClick={handleClick}
+      sx={{
+        cursor: isDragging ? 'grabbing' : 'pointer',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+      }}
+    />
+  );
+};
 
 const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
   return (
@@ -42,12 +117,88 @@ const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
+  // Default tab configuration
+  const defaultTabs: SettingsTab[] = [
+    { id: 'account', label: 'Account', component: <AccountSettings /> },
+    { id: 'closed-dates', label: 'Closed Dates', component: <ClosedDatesManager /> },
+    { id: 'public-holidays', label: 'Public Holidays', component: <PublicHolidaysManager /> },
+    { id: 'birthdays', label: 'Birthdays', component: <BirthdaysManager /> },
+    { id: 'notifications', label: 'Notifications', component: <NotificationSettings /> },
+    { id: 'sales-items', label: 'Sales Items', component: <SalesItemsManager /> },
+  ];
+
+  // Load tab order from localStorage or use default
+  const [tabs, setTabs] = useState<SettingsTab[]>(() => {
+    const savedOrder = localStorage.getItem('settingsTabOrder');
+    if (savedOrder) {
+      try {
+        const orderIds = JSON.parse(savedOrder);
+        // Reorder tabs based on saved order
+        const orderedTabs = orderIds
+          .map((id: string) => defaultTabs.find(tab => tab.id === id))
+          .filter((tab: SettingsTab | undefined): tab is SettingsTab => tab !== undefined);
+        
+        // Add any new tabs that weren't in saved order
+        const newTabs = defaultTabs.filter(tab => !orderIds.includes(tab.id));
+        return [...orderedTabs, ...newTabs];
+      } catch {
+        return defaultTabs;
+      }
+    }
+    return defaultTabs;
+  });
+  
   // Check if we should open a specific tab (e.g., from birthday banner)
   const initialTab = location.state?.openTab || 0;
   const [currentTab, setCurrentTab] = useState(initialTab);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setCurrentTab(newValue);
+  // Setup drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 10, // 10px movement required before drag starts
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 500, // 500ms hold before drag starts on touch devices (longer delay)
+        tolerance: 8, // Allow 8px movement during hold (for scrolling)
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setTabs((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        
+        const newOrder = arrayMove(items, oldIndex, newIndex);
+        
+        // Save new order to localStorage
+        localStorage.setItem('settingsTabOrder', JSON.stringify(newOrder.map(tab => tab.id)));
+        
+        // Adjust current tab index if needed
+        if (currentTab === oldIndex) {
+          setCurrentTab(newIndex);
+        } else if (currentTab > oldIndex && currentTab <= newIndex) {
+          setCurrentTab(currentTab - 1);
+        } else if (currentTab < oldIndex && currentTab >= newIndex) {
+          setCurrentTab(currentTab + 1);
+        }
+        
+        return newOrder;
+      });
+    }
+  };
+
+  const handleTabClick = (index: number) => {
+    setCurrentTab(index);
   };
 
   const handleBack = () => {
@@ -74,40 +225,45 @@ const SettingsPage: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Tabs */}
+      {/* Tabs with drag and drop */}
       <Paper square elevation={0}>
-        <Tabs
-          value={currentTab}
-          onChange={handleTabChange}
-          indicatorColor="primary"
-          textColor="primary"
-          variant="scrollable"
-          scrollButtons="auto"
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          <Tab label="Account" id="settings-tab-0" />
-          <Tab label="Closed Dates" id="settings-tab-1" />
-          <Tab label="Public Holidays" id="settings-tab-2" />
-          <Tab label="Birthdays" id="settings-tab-3" />
-          <Tab label="Notifications" id="settings-tab-4" />
-        </Tabs>
+          <SortableContext
+            items={tabs.map(tab => tab.id)}
+            strategy={horizontalListSortingStrategy}
+          >
+            <Tabs
+              value={currentTab}
+              indicatorColor="primary"
+              textColor="primary"
+              variant="scrollable"
+              scrollButtons="auto"
+            >
+              {tabs.map((tab, index) => (
+                <SortableTab
+                  key={tab.id}
+                  id={tab.id}
+                  label={tab.label}
+                  index={index}
+                  isActive={currentTab === index}
+                  onClick={() => handleTabClick(index)}
+                />
+              ))}
+            </Tabs>
+          </SortableContext>
+        </DndContext>
       </Paper>
 
       {/* Tab Panels */}
-      <TabPanel value={currentTab} index={0}>
-        <AccountSettings />
-      </TabPanel>
-      <TabPanel value={currentTab} index={1}>
-        <ClosedDatesManager />
-      </TabPanel>
-      <TabPanel value={currentTab} index={2}>
-        <PublicHolidaysManager />
-      </TabPanel>
-      <TabPanel value={currentTab} index={3}>
-        <BirthdaysManager />
-      </TabPanel>
-      <TabPanel value={currentTab} index={4}>
-        <NotificationSettings />
-      </TabPanel>
+      {tabs.map((tab, index) => (
+        <TabPanel key={tab.id} value={currentTab} index={index}>
+          {tab.component}
+        </TabPanel>
+      ))}
     </Box>
   );
 };

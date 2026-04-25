@@ -60,16 +60,26 @@ class NotificationService {
   // Request notification permission from user
   async requestPermission(): Promise<boolean> {
     if (!('Notification' in window)) {
-      console.warn('This browser does not support notifications');
+      console.warn('This browser does not support desktop notifications');
       return false;
     }
 
+    console.log('Current permission before request:', Notification.permission);
+
     if (this.permission === 'granted') {
+      console.log('Permission already granted');
       return true;
     }
 
+    if (this.permission === 'denied') {
+      console.log('Permission was previously denied');
+      return false;
+    }
+
     try {
+      console.log('Requesting notification permission...');
       const permission = await Notification.requestPermission();
+      console.log('Permission result:', permission);
       this.permission = permission;
       return permission === 'granted';
     } catch (error) {
@@ -100,14 +110,14 @@ class NotificationService {
   }
 
   // Send a birthday notification
-  async sendBirthdayNotification(birthday: BirthdayNotification): Promise<void> {
+  async sendBirthdayNotification(birthday: BirthdayNotification, skipDuplicateCheck = false): Promise<void> {
     if (!this.isSupported()) {
       console.warn('Notifications not supported or not permitted');
       return;
     }
 
-    // Don't send duplicate notifications
-    if (this.wasNotified(birthday)) {
+    // Don't send duplicate notifications (unless explicitly skipped for testing)
+    if (!skipDuplicateCheck && this.wasNotified(birthday)) {
       return;
     }
 
@@ -123,7 +133,9 @@ class NotificationService {
         body = `${birthday.name}'s birthday is in 3 days – turning ${birthday.turningAge}`;
       } else if (birthday.daysUntil === 7) {
         title = '📅 Birthday Coming Up';
-        body = `${birthday.name}'s birthday is in 7 days – turning ${birthday.turningAge}`;
+        body = birthday.name === 'System' 
+          ? 'Notifications are now enabled! You\'ll receive birthday reminders here.'
+          : `${birthday.name}'s birthday is in 7 days – turning ${birthday.turningAge}`;
       } else {
         return;
       }
@@ -136,8 +148,10 @@ class NotificationService {
         requireInteraction: birthday.daysUntil === 0, // Keep today's notifications visible
       });
 
-      // Mark as notified
-      this.markAsNotified(birthday);
+      // Mark as notified (unless it's a test notification)
+      if (!skipDuplicateCheck) {
+        this.markAsNotified(birthday);
+      }
 
       // Auto-close after 10 seconds (except for today's birthdays)
       if (birthday.daysUntil !== 0) {

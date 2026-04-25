@@ -76,8 +76,8 @@ const DebtDisplay: React.FC<DebtDisplayProps> = ({ refreshTrigger = 0 }) => {
         },
       }}
     >
-      <CardContent>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontSize: { xs: '0.813rem', sm: '0.875rem' } }}>
           Net Debt
         </Typography>
         <Typography
@@ -85,6 +85,7 @@ const DebtDisplay: React.FC<DebtDisplayProps> = ({ refreshTrigger = 0 }) => {
           sx={{
             fontWeight: 'bold',
             color: isNoDebt ? '#2e7d32' : '#e65100',
+            fontSize: { xs: '1.5rem', sm: '2.125rem' },
           }}
         >
           {displayText}

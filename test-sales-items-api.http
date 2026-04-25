@@ -1,0 +1,12 @@
+# Test Sales Items API
+
+### Get all items
+GET http://localhost:3001/api/sales-items
+
+### Create an item
+POST http://localhost:3001/api/sales-items
+Content-Type: application/json
+
+{
+  "name": "Test Item"
+}

@@ -1,4 +1,4 @@
-import { DebtResult, Entity } from '../../types/debtTrackerV2';
+import { DebtResult, Entity } from '../../types/debtTracker';
 
 /**
  * Converts a DebtResult to a human-readable display string

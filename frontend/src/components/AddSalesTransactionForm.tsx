@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -14,11 +14,13 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Autocomplete,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TransitionProps } from '@mui/material/transitions';
 import { format } from 'date-fns';
 import { createSale, CreateSaleData } from '../api/salesApi';
+import { getSalesItems, SalesItem } from '../api/salesItemsApi';
 
 interface AddSalesTransactionFormProps {
   onTransactionCreated: () => void;
@@ -36,6 +38,7 @@ const Transition = React.forwardRef(function Transition(
 const AddSalesTransactionForm: React.FC<AddSalesTransactionFormProps> = ({
   onTransactionCreated,
 }) => {
+  const [salesItems, setSalesItems] = useState<SalesItem[]>([]);
   const [item, setItem] = useState<string>('');
   const [price, setPrice] = useState<string>('');
   const [quantity, setQuantity] = useState<string>('1');
@@ -46,8 +49,18 @@ const AddSalesTransactionForm: React.FC<AddSalesTransactionFormProps> = ({
   const [errorMessage, setErrorMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const handleItemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setItem(e.target.value);
+  // Load sales items on mount
+  useEffect(() => {
+    loadSalesItems();
+  }, []);
+
+  const loadSalesItems = async () => {
+    try {
+      const items = await getSalesItems();
+      setSalesItems(items);
+    } catch (error) {
+      console.error('Error loading sales items:', error);
+    }
   };
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,17 +207,28 @@ const AddSalesTransactionForm: React.FC<AddSalesTransactionFormProps> = ({
           </Select>
         </FormControl>
 
-        <TextField
-          label="Item"
+        <Autocomplete
+          freeSolo
+          options={salesItems.map((item) => item.name)}
           value={item}
-          onChange={handleItemChange}
-          fullWidth
-          required
-          placeholder="e.g., Product A, Service B"
-          sx={{ mb: 2 }}
+          onChange={(event, newValue) => {
+            setItem(newValue || '');
+          }}
+          onInputChange={(event, newInputValue) => {
+            setItem(newInputValue);
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Item"
+              required
+              placeholder="Select or type item name"
+              sx={{ mb: 2 }}
+            />
+          )}
         />
 
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
           <TextField
             label="Total Price ($)"
             type="number"
@@ -225,7 +249,7 @@ const AddSalesTransactionForm: React.FC<AddSalesTransactionFormProps> = ({
             type="number"
             value={quantity}
             onChange={handleQuantityChange}
-            sx={{ width: '150px' }}
+            sx={{ width: { xs: '100%', sm: '150px' } }}
             inputProps={{ min: 1, step: 1 }}
             required
           />

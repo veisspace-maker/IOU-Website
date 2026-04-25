@@ -91,27 +91,27 @@ const ItemBreakdownTable: React.FC<ItemBreakdownTableProps> = ({
   }
 
   return (
-    <TableContainer component={Paper} elevation={1}>
-      <Table>
+    <TableContainer component={Paper} elevation={1} sx={{ overflowX: 'auto' }}>
+      <Table sx={{ minWidth: { xs: 500, sm: 'auto' } }}>
         <TableHead>
           <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
             <TableCell>
-              <Typography variant="subtitle2" fontWeight="bold">
+              <Typography variant="subtitle2" fontWeight="bold" sx={{ fontSize: { xs: '0.813rem', sm: '0.875rem' } }}>
                 Item
               </Typography>
             </TableCell>
             <TableCell align="right">
-              <Typography variant="subtitle2" fontWeight="bold">
+              <Typography variant="subtitle2" fontWeight="bold" sx={{ fontSize: { xs: '0.813rem', sm: '0.875rem' } }}>
                 Total Revenue
               </Typography>
             </TableCell>
             <TableCell align="right">
-              <Typography variant="subtitle2" fontWeight="bold">
+              <Typography variant="subtitle2" fontWeight="bold" sx={{ fontSize: { xs: '0.813rem', sm: '0.875rem' } }}>
                 Quantity
               </Typography>
             </TableCell>
             <TableCell align="right">
-              <Typography variant="subtitle2" fontWeight="bold">
+              <Typography variant="subtitle2" fontWeight="bold" sx={{ fontSize: { xs: '0.813rem', sm: '0.875rem' } }}>
                 Transactions
               </Typography>
             </TableCell>
@@ -131,18 +131,18 @@ const ItemBreakdownTable: React.FC<ItemBreakdownTableProps> = ({
               }}
             >
               <TableCell>
-                <Typography variant="body1">{stat.item}</Typography>
+                <Typography variant="body1" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>{stat.item}</Typography>
               </TableCell>
               <TableCell align="right">
-                <Typography variant="body1" sx={{ color: '#2e7d32', fontWeight: 'medium' }}>
+                <Typography variant="body1" sx={{ color: '#2e7d32', fontWeight: 'medium', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                   ${stat.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </Typography>
               </TableCell>
               <TableCell align="right">
-                <Typography variant="body1">{stat.totalQuantity}</Typography>
+                <Typography variant="body1" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>{stat.totalQuantity}</Typography>
               </TableCell>
               <TableCell align="right">
-                <Typography variant="body1">{stat.count}</Typography>
+                <Typography variant="body1" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>{stat.count}</Typography>
               </TableCell>
             </TableRow>
           ))}

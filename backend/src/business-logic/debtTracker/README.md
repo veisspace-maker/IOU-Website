@@ -1,22 +1,34 @@
-# Debt Tracker V2 - Business Logic
+# Debt Tracker - Business Logic
 
-This directory contains the core business logic for the Debt Tracker V2 system.
+This directory contains the core business logic for the Debt Tracker system.
 
 ## Overview
 
-The Debt Tracker V2 is a transaction-based debt tracking system that stores raw transactions and derives net debt through calculation. The system handles three entities (Lev, Danik, and 2Masters) and applies specific rules to calculate who owes whom.
+The Debt Tracker is a transaction-based debt tracking system that stores raw transactions in their original form and derives net debt through calculation. The system handles three entities (Lev, Danik, and 2masters) and applies specific 50/50 split rules to calculate who owes whom.
+
+**Key Principle**: Transactions are stored exactly as entered (preserving "2masters" entity), and the 50/50 split logic is applied only during debt calculation, not during storage.
 
 ## Components
 
-### Types (`../../types/debtTrackerV2.ts`)
+### Types (`../../types/debtTracker.ts`)
 - `Entity`: Type union for the three participants ('lev' | 'danik' | '2masters')
 - `Transaction`: Interface for raw money movements between entities
 - `DebtResult`: Interface for calculated net debt results
 - `ValidationResult`: Interface for transaction validation outcomes
 
-### Modules (to be implemented)
-- `transactionValidator.ts`: Validates transaction data before storage
-- `debtCalculator.ts`: Calculates net debt from transaction history
+### Implemented Modules
+- `TransactionValidator.ts`: Validates transaction data before storage
+  - Validates entity names (must be 'lev', 'danik', or '2masters')
+  - Prevents self-transactions (from and to must be different)
+  - Validates amounts (must be positive)
+  - Validates timestamps (cannot be in the future)
+- `DebtCalculator.ts`: Calculates net debt from transaction history
+  - Handles direct transactions (Lev ↔ Danik)
+  - Handles split transactions (involving 2masters with 50/50 logic)
+  - Returns debtor, creditor, and amount
+- `formatters.ts`: Utility functions for formatting entities and currency
+  - `formatEntityName()`: Capitalizes entity names for display
+  - `formatCurrency()`: Formats amounts as AUD currency
 
 ## Testing Strategy
 
@@ -39,13 +51,13 @@ await fc.assert(
 ### Test Tagging Convention
 
 Each property-based test is tagged with:
-- Feature name: `debt-tracker-v2`
+- Feature name: `debt-tracker`
 - Property number and description from the design document
 
 Example:
 ```typescript
 /**
- * Feature: debt-tracker-v2, Property 8: Direct Transaction Debt Calculation (Lev to Danik)
+ * Feature: debt-tracker, Property 8: Direct Transaction Debt Calculation (Lev to Danik)
  * 
  * **Validates: Requirements 3.1**
  * 
@@ -61,11 +73,20 @@ Example:
 npm test
 
 # Run specific test file
-npm test -- debtTrackerV2
+npm test -- DebtCalculator
 
 # Run tests in watch mode
 npm run test:watch
 ```
+
+## Integration with Sales Tracker
+
+The Debt Tracker automatically receives transactions from the Sales Tracker:
+- When a sale is recorded, a debt transaction is created: `2masters → seller`
+- The total sale amount (price × quantity) becomes the transaction amount
+- The debt description includes sale details for traceability
+- This represents that the seller received company money (including the other person's 50% share)
+- The 50/50 split logic in `DebtCalculator` determines the actual debt owed
 
 ## Design Principles
 

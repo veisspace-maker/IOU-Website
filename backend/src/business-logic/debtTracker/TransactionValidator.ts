@@ -8,7 +8,7 @@
  * - Timestamps must be valid numbers
  */
 
-import type { Entity, Transaction, ValidationResult } from '../../types/debtTrackerV2';
+import type { Entity, Transaction, ValidationResult } from '../../types/debtTracker';
 
 const VALID_ENTITIES: readonly Entity[] = ['lev', 'danik', '2masters'] as const;
 

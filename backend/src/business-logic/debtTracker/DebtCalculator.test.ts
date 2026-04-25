@@ -1,5 +1,5 @@
 import { calculateNetDebt } from './DebtCalculator';
-import { Transaction } from '../../types/debtTrackerV2';
+import { Transaction } from '../../types/debtTracker';
 
 describe('DebtCalculator', () => {
   describe('calculateNetDebt', () => {

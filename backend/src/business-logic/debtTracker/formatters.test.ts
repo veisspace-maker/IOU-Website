@@ -1,5 +1,5 @@
 import { formatDebtDisplay, formatCurrency, formatEntityName, formatTimestamp } from './formatters';
-import { DebtResult } from '../../types/debtTrackerV2';
+import { DebtResult } from '../../types/debtTracker';
 
 describe('formatters', () => {
   describe('formatDebtDisplay', () => {

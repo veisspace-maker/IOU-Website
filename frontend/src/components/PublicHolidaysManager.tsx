@@ -241,17 +241,7 @@ const PublicHolidaysManager: React.FC = () => {
           }}
         />
 
-        <TextField
-          fullWidth
-          type="date"
-          label="Date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          sx={{ mb: 2 }}
-        />
-
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
           <Button
             variant="contained"
             onClick={handleSubmit}
@@ -268,7 +258,7 @@ const PublicHolidaysManager: React.FC = () => {
             variant="outlined"
             color="primary"
             onClick={() => setShowImportDialog(true)}
-            sx={{ ml: 'auto' }}
+            sx={{ ml: { xs: 0, sm: 'auto' } }}
           >
             Import Holidays from Web
           </Button>

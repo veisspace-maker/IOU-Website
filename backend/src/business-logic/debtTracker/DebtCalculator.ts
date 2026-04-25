@@ -1,4 +1,4 @@
-import { Transaction, DebtResult } from '../../types/debtTrackerV2';
+import { Transaction, DebtResult } from '../../types/debtTracker';
 
 /**
  * DebtCalculator module for calculating net debt between Lev and Danik

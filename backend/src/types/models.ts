@@ -114,6 +114,7 @@ export interface SalesTransaction {
   price: number;           // Sale amount (must be > 0)
   quantity: number;        // Quantity sold (must be > 0, defaults to 1)
   date: string;            // ISO 8601 date string (YYYY-MM-DD)
+  seller: string;          // Seller name/identifier
   description: string | null;  // Optional additional details
   createdBy: string;       // User ID who created the record
   createdAt?: Date;        // Timestamp when record was created

@@ -15,6 +15,7 @@ import {
   TextField,
   InputAdornment,
   Collapse,
+  IconButton,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';

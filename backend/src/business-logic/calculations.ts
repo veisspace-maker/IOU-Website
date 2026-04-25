@@ -89,3 +89,89 @@ export function checkLeaveOverlap(
     );
   });
 }
+
+/**
+ * Calculate age from date of birth
+ */
+export function calculateAge(dateOfBirth: Date, currentDate: Date = new Date()): number {
+  const dob = new Date(dateOfBirth);
+  const today = new Date(currentDate);
+  
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  
+  // Adjust age if birthday hasn't occurred yet this year
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  
+  return age;
+}
+
+/**
+ * Check if today is someone's birthday
+ */
+export function isBirthdayToday(dateOfBirth: Date, currentDate: Date = new Date()): boolean {
+  const dob = new Date(dateOfBirth);
+  const today = new Date(currentDate);
+  
+  return dob.getMonth() === today.getMonth() && dob.getDate() === today.getDate();
+}
+
+/**
+ * Check if a closed date period overlaps with existing closed dates
+ */
+export function checkClosedDateOverlap(
+  startDate: Date,
+  endDate: Date,
+  existingClosedDates: ClosedDate[]
+): ClosedDate[] {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  
+  return existingClosedDates.filter(closedDate => {
+    const closedStart = new Date(closedDate.startDate);
+    const closedEnd = new Date(closedDate.endDate);
+    closedStart.setHours(0, 0, 0, 0);
+    closedEnd.setHours(0, 0, 0, 0);
+    
+    // Check for overlap
+    return (
+      (start >= closedStart && start <= closedEnd) ||
+      (end >= closedStart && end <= closedEnd) ||
+      (start <= closedStart && end >= closedEnd) ||
+      (closedStart <= start && closedEnd >= end)
+    );
+  });
+}
+
+/**
+ * Check if a closed date period conflicts with existing leave records
+ */
+export function checkClosedDateLeaveConflict(
+  startDate: Date,
+  endDate: Date,
+  existingLeave: LeaveRecord[]
+): LeaveRecord[] {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  
+  return existingLeave.filter(leave => {
+    const leaveStart = new Date(leave.startDate);
+    const leaveEnd = new Date(leave.endDate);
+    leaveStart.setHours(0, 0, 0, 0);
+    leaveEnd.setHours(0, 0, 0, 0);
+    
+    // Check for overlap
+    return (
+      (start >= leaveStart && start <= leaveEnd) ||
+      (end >= leaveStart && end <= leaveEnd) ||
+      (start <= leaveStart && end >= leaveEnd) ||
+      (leaveStart <= start && leaveEnd >= end)
+    );
+  });
+}

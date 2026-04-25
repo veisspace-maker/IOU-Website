@@ -104,8 +104,8 @@ const DebtSummaryCard: React.FC<DebtSummaryCardProps> = ({ refreshKey = 0 }) => 
       }}
       onClick={handleCardClick}
     >
-      <CardContent>
-        <Typography variant="body1" component="div">
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="body1" component="div" sx={{ fontSize: { xs: '0.938rem', sm: '1rem' } }}>
           <Box component="span" sx={{ fontWeight: 'bold' }}>
             {debtData.debtor}
           </Box>
@@ -114,7 +114,7 @@ const DebtSummaryCard: React.FC<DebtSummaryCardProps> = ({ refreshKey = 0 }) => 
             {debtData.creditor}
           </Box>
         </Typography>
-        <Typography variant="h5" sx={{ mt: 1, fontWeight: 'bold' }}>
+        <Typography variant="h5" sx={{ mt: 1, fontWeight: 'bold', fontSize: { xs: '1.5rem', sm: '1.75rem' } }}>
           ${debtData.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </Typography>
       </CardContent>

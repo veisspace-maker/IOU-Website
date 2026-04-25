@@ -1,6 +1,8 @@
 # Leave Tracker
 
-A comprehensive employee leave management system with intelligent business day calculations and overlap detection.
+## Description
+
+The Leave Tracker is a comprehensive employee leave management system that helps track and manage employee time off. It automatically calculates business days by intelligently excluding weekends, public holidays, and company closure periods. The system provides real-time overlap detection to prevent scheduling conflicts, warns users about past dates, and maintains accurate leave records with a user-friendly calendar interface. All leave calculations are automatically updated when holidays or closed dates change, ensuring data consistency across the organization.
 
 ## Overview
 

@@ -63,18 +63,26 @@ The application provides a unified interface for financial tracking, HR manageme
 - Automatic debt transaction creation
 - Seller performance tracking
 - Pagination and filtering
+- Sales items management for quick item selection
+- Drill-down views for detailed item analysis
 
 **Key Components:**
 - `SalesPage.tsx`
 - `AddSalesTransactionForm.tsx`
 - `SalesTransactionList.tsx`
 - `ItemBreakdownTable.tsx`
+- `SalesItemsManager.tsx`
+- `DrillDownView.tsx`
 
 **API Endpoints:**
 - `GET /api/sales` - List sales
 - `POST /api/sales` - Create sale
 - `PUT /api/sales/:id` - Update sale
 - `DELETE /api/sales/:id` - Delete sale
+- `GET /api/sales-items` - List sales items
+- `POST /api/sales-items` - Create sales item
+- `PUT /api/sales-items/:id` - Update sales item
+- `DELETE /api/sales-items/:id` - Delete sales item
 
 ### 2. Debt Tracker
 - Track money between Lev and Danik
@@ -120,10 +128,11 @@ The application provides a unified interface for financial tracking, HR manageme
 ### 4. Settings
 - User account management
 - Two-factor authentication setup
-- Public holidays management
+- Public holidays management with bulk import
 - Company closed dates
 - Employee birthdays
 - Birthday notification preferences
+- Sales items management
 
 **Key Components:**
 - `SettingsPage.tsx`
@@ -132,13 +141,35 @@ The application provides a unified interface for financial tracking, HR manageme
 - `ClosedDatesManager.tsx`
 - `BirthdaysManager.tsx`
 - `NotificationSettings.tsx`
+- `SalesItemsManager.tsx`
 
 **API Endpoints:**
 - `/api/auth/*` - Authentication
 - `/api/users/*` - User management
 - `/api/holidays/*` - Holidays
+- `/api/holiday-import/*` - Holiday bulk import
 - `/api/closed-dates/*` - Closed dates
 - `/api/birthdays/*` - Birthdays
+- `/api/sales-items/*` - Sales items
+
+### 5. Progressive Web App (PWA)
+- Installable on mobile and desktop devices
+- Offline support with service worker
+- Auto-update functionality
+- App-like experience with custom icons
+- Push notification support for birthdays
+
+**Key Components:**
+- `PWAInstallPrompt.tsx`
+- `PWAUpdatePrompt.tsx`
+- Service worker with caching strategies
+
+**Features:**
+- Install prompt for supported devices
+- Update notification when new version available
+- Offline caching for static assets
+- Network-first strategy for API calls
+- Custom app icons and splash screens
 
 ## Technology Stack
 
@@ -153,9 +184,13 @@ The application provides a unified interface for financial tracking, HR manageme
   "@mui/x-date-pickers": "^6.18.7",
   "@emotion/react": "^11.11.3",
   "@emotion/styled": "^11.11.0",
+  "@reduxjs/toolkit": "^2.0.1",
+  "react-redux": "^9.0.4",
   "axios": "^1.6.5",
   "date-fns": "^3.0.6",
-  "date-fns-tz": "^2.0.0"
+  "date-fns-tz": "^2.0.0",
+  "vite-plugin-pwa": "^0.17.4",
+  "workbox-window": "^7.0.0"
 }
 ```
 
@@ -410,17 +445,19 @@ const ProtectedRoute = ({ children }) => {
 
 ### State Management Approach
 
-The application uses React Context API for authentication state management:
+The application uses a hybrid approach combining React Context and Redux Toolkit:
 
 - **AuthContext**: Manages user authentication state, login/logout, and session handling
+- **Redux Toolkit**: Manages global application state (currently minimal usage)
 - **Component State**: Local state for forms and UI interactions
 - **API Calls**: Direct API calls with axios for data fetching and mutations
 
-This lightweight approach provides:
-- Simple authentication flow
+This approach provides:
+- Simple authentication flow with Context API
+- Scalable state management with Redux Toolkit
 - Minimal boilerplate
 - Easy to understand and maintain
-- Sufficient for the application's needs
+- Room for growth as application complexity increases
 
 ## API Documentation
 
@@ -640,6 +677,32 @@ refactor: Refactor code
 style: Format code
 chore: Update dependencies
 ```
+
+## PWA Features
+
+### Installation
+- Install prompt appears automatically on supported devices
+- Custom install button in app interface
+- Works on iOS, Android, and desktop browsers
+- App icon and splash screen customization
+
+### Offline Support
+- Service worker caches static assets
+- Network-first strategy for API calls with 5-minute cache fallback
+- Offline page for when network is unavailable
+- Background sync for pending operations
+
+### Updates
+- Automatic update detection
+- User-friendly update prompt
+- Seamless update installation
+- No data loss during updates
+
+### Notifications
+- Browser push notifications for birthdays
+- Configurable notification preferences
+- Permission management in settings
+- Daily birthday reminders
 
 ## License
 

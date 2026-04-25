@@ -1,19 +1,20 @@
 # Debt Tracker
 
-A sophisticated debt tracking system for managing money owed between Lev and Danik, including shared expenses through the "2masters" entity.
+A simplified debt tracking system for managing money owed between Lev and Danik, including shared expenses through the "2masters" entity.
 
 ## Overview
 
-The Debt Tracker maintains accurate records of all financial transactions between Lev and Danik, automatically calculating net debt positions. It supports direct transactions and shared expenses, providing a clear picture of who owes whom.
+The Debt Tracker maintains accurate records of all financial transactions between Lev and Danik, automatically calculating net debt positions. It supports direct transactions and shared expenses (50/50 split via 2masters), providing a clear picture of who owes whom. The system stores transactions in their original form and calculates debt on-demand.
 
 ## Features
 
 ### Transaction Management
 - Create, edit, and delete debt transactions
-- Support for three entities: Lev, Danik, and 2masters (shared)
+- Support for three entities: Lev, Danik, and 2masters (shared 50/50)
 - Timestamp-based transaction ordering
 - Optional descriptions for context
 - Automatic pagination (100 transactions per page)
+- Transactions stored in original form (not converted)
 
 ### Debt Calculation
 - Real-time net debt calculation
@@ -23,11 +24,12 @@ The Debt Tracker maintains accurate records of all financial transactions betwee
 - Balance verification
 
 ### Smart Features
-- Self-transaction prevention
+- Self-transaction prevention (from and to must be different)
 - Positive amount validation
 - Timestamp validation (no future dates)
-- Entity name normalization
+- Entity name normalization (case-insensitive)
 - Automatic debt display updates
+- Integration with Sales Tracker (sales create debt transactions)
 
 ## User Interface
 
@@ -79,6 +81,8 @@ DebtResult {
   amount: number          // Absolute debt amount
 }
 ```
+
+**Important**: The "2masters" entity is NOT a person or wallet - it's a UI/UX concept representing 50/50 split transactions. Transactions are stored in their original form with "2masters" preserved, and the 50/50 split logic is applied only during debt calculation.
 
 ## API Endpoints
 
@@ -308,12 +312,18 @@ CREATE INDEX idx_debt_entities ON debt_transactions_v2(from_entity, to_entity);
 ## Integration with Sales Tracker
 
 When a sale is recorded:
-1. Sales Tracker creates the sale transaction
-2. Automatically creates corresponding debt transaction
-3. Debt flows from buyer to seller
-4. Net debt updates automatically
+1. Sales Tracker creates the sale transaction with item, price, quantity, and seller
+2. Automatically creates corresponding debt transaction: `2masters → seller` for the total amount
+3. This represents that the seller received company money (including the other person's 50% share)
+4. The debt calculation applies 50/50 split logic to determine who owes whom
+5. Net debt updates automatically
 
-This ensures financial records stay synchronized.
+**Example**: If Leva makes a $100 sale:
+- Sales transaction: Item sold for $100 by Leva
+- Debt transaction: `2masters → lev` for $100
+- Debt calculation: Danik owes Lev $50 (his half of the company money)
+
+This ensures financial records stay synchronized between sales and debts.
 
 ## Utilities
 

@@ -50,6 +50,13 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     setAmount(e.target.value);
   };
 
+  const handleAmountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Prevent 'e', 'E', '+', and '-' from being entered
+    if (e.key === 'e' || e.key === 'E' || e.key === '+' || e.key === '-') {
+      e.preventDefault();
+    }
+  };
+
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDescription(e.target.value);
   };
@@ -175,12 +182,13 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           />
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
           <TextField
             label="Amount ($)"
             type="number"
             value={amount}
             onChange={handleAmountChange}
+            onKeyDown={handleAmountKeyDown}
             fullWidth
             inputProps={{ min: 0, step: 0.01 }}
             required
@@ -207,6 +215,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           placeholder="e.g., Dinner, Rent, Groceries"
           multiline
           rows={2}
+          InputLabelProps={{
+            shrink: true,
+          }}
         />
 
         <Button

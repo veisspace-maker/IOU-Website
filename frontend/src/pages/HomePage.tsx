@@ -66,14 +66,14 @@ const HomePage: React.FC = () => {
             }}
             onClick={() => navigate('/debt-tracker')}
           >
-            <CardContent sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="h4" gutterBottom sx={{ color: '#000', fontWeight: 'bold' }}>
+            <CardContent sx={{ textAlign: 'center', py: { xs: 2, sm: 4 } }}>
+              <Typography variant="h4" gutterBottom sx={{ color: '#000', fontWeight: 'bold', fontSize: { xs: '2rem', sm: '2.125rem' } }}>
                 $
               </Typography>
-              <Typography variant="h5" gutterBottom sx={{ color: '#000' }}>
+              <Typography variant="h5" gutterBottom sx={{ color: '#000', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                 Debt Tracker
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.813rem', sm: '0.875rem' } }}>
                 Track personal debts
               </Typography>
             </CardContent>
@@ -94,14 +94,14 @@ const HomePage: React.FC = () => {
             }}
             onClick={() => navigate('/leave')}
           >
-            <CardContent sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="h4" gutterBottom sx={{ color: '#000', fontWeight: 'bold' }}>
+            <CardContent sx={{ textAlign: 'center', py: { xs: 2, sm: 4 } }}>
+              <Typography variant="h4" gutterBottom sx={{ color: '#000', fontWeight: 'bold', fontSize: { xs: '2rem', sm: '2.125rem' } }}>
                 ⌚
               </Typography>
-              <Typography variant="h5" gutterBottom sx={{ color: '#000' }}>
+              <Typography variant="h5" gutterBottom sx={{ color: '#000', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                 Leave Tracker
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.813rem', sm: '0.875rem' } }}>
                 Manage leave and time off
               </Typography>
             </CardContent>
@@ -122,14 +122,18 @@ const HomePage: React.FC = () => {
             }}
             onClick={() => navigate('/sales')}
           >
-            <CardContent sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="h4" gutterBottom sx={{ color: '#000', fontWeight: 'bold' }}>
-                📊
-              </Typography>
-              <Typography variant="h5" gutterBottom sx={{ color: '#000' }}>
+            <CardContent sx={{ textAlign: 'center', py: { xs: 2, sm: 4 } }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style={{ width: '40px', height: '40px' }}>
+                  <rect x="8" y="20" width="8" height="20" fill="#333333" />
+                  <rect x="20" y="12" width="8" height="28" fill="#555555" />
+                  <rect x="32" y="8" width="8" height="32" fill="#777777" />
+                </svg>
+              </Box>
+              <Typography variant="h5" gutterBottom sx={{ color: '#000', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                 Sales Tracker
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.813rem', sm: '0.875rem' } }}>
                 Track sales and revenue
               </Typography>
             </CardContent>
@@ -139,7 +143,7 @@ const HomePage: React.FC = () => {
 
         {/* Debt Summary */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" gutterBottom>
+          <Typography variant="h5" gutterBottom sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
             Debt Summary
           </Typography>
           <DebtSummaryCard refreshKey={refreshKey} />
@@ -147,7 +151,7 @@ const HomePage: React.FC = () => {
 
         {/* Leave Summary Cards */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" gutterBottom>
+          <Typography variant="h5" gutterBottom sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
             Leave Summary
           </Typography>
           <LeaveSummaryCards />

@@ -142,7 +142,7 @@ const LeaveSummaryCards: React.FC = () => {
         <Card
           key={card.id}
           sx={{
-            minWidth: 320,
+            minWidth: { xs: 280, sm: 320 },
             cursor: 'pointer',
             transition: 'transform 0.2s, box-shadow 0.2s',
             backgroundColor: '#f5f5f5',
@@ -155,14 +155,14 @@ const LeaveSummaryCards: React.FC = () => {
           }}
           onClick={() => handleCardClick(card)}
         >
-          <CardContent>
-            <Typography variant="body1" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <Typography variant="body1" component="div" sx={{ fontWeight: 'bold', mb: 1, fontSize: { xs: '0.938rem', sm: '1rem' } }}>
               {card.personName} is on leave
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.813rem', sm: '0.875rem' } }}>
               {format(card.startDate, 'dd/MM/yyyy')} → {format(card.endDate, 'dd/MM/yyyy')}
             </Typography>
-            <Typography variant="body2" sx={{ mt: 1 }}>
+            <Typography variant="body2" sx={{ mt: 1, fontSize: { xs: '0.813rem', sm: '0.875rem' } }}>
               ({card.businessDays} business day{card.businessDays !== 1 ? 's' : ''})
             </Typography>
           </CardContent>

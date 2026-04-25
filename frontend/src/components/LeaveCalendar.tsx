@@ -65,17 +65,14 @@ interface LeaveCalendarProps {
   refreshKey: number;
 }
 
-// Default colors for users (can be customized in settings)
-const DEFAULT_COLOR = '#4caf50';
-
-const getStoredColors = (): { [key: string]: string } => {
-  try {
-    const saved = localStorage.getItem('calendarColors');
-    return saved ? JSON.parse(saved) : {};
-  } catch {
-    return {};
-  }
+// Hardcoded colors for users
+const USER_COLORS: { [key: string]: string } = {
+  'Leva': '#4caf50',    // Green
+  'Danik': '#2196f3',   // Blue
+  '2 Masters': '#ff9800', // Orange
 };
+
+const DEFAULT_COLOR = '#4caf50';
 
 const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
   selectedPersonId,
@@ -88,7 +85,6 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
   const [holidays, setHolidays] = useState<PublicHoliday[]>([]);
   const [closedDates, setClosedDates] = useState<ClosedDate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userColors, setUserColors] = useState<{ [key: string]: string }>(getStoredColors());
   const [datePickerAnchor, setDatePickerAnchor] = useState<HTMLElement | null>(null);
 
   // Selection state
@@ -153,21 +149,6 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
 
     fetchData();
   }, [refreshKey]);
-
-  // Listen for color updates
-  useEffect(() => {
-    const handleColorUpdate = () => {
-      setUserColors(getStoredColors());
-    };
-
-    window.addEventListener('calendarColorsUpdated', handleColorUpdate);
-    window.addEventListener('storage', handleColorUpdate);
-
-    return () => {
-      window.removeEventListener('calendarColorsUpdated', handleColorUpdate);
-      window.removeEventListener('storage', handleColorUpdate);
-    };
-  }, []);
 
   // Scroll to selected person's leave when selected
   useEffect(() => {
@@ -292,9 +273,13 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
     });
   };
 
-  // Get user color
+  // Get user color based on username
   const getUserColor = (userId: string): string => {
-    return userColors[userId] || DEFAULT_COLOR;
+    const user = users.find(u => u.id === userId);
+    if (user && USER_COLORS[user.username]) {
+      return USER_COLORS[user.username];
+    }
+    return DEFAULT_COLOR;
   };
 
   // Helper function to get weekdays in range
@@ -434,26 +419,38 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
     const start = selectedDates[0];
     const end = selectedDates[selectedDates.length - 1];
 
-    // If a person is selected, navigate to leave page with pre-filled dates
-    if (selectedPersonId) {
-      navigate('/leave', {
-        state: {
-          selectedPersonId: selectedPersonId,
-          startDate: format(start, 'yyyy-MM-dd'),
-          endDate: format(end, 'yyyy-MM-dd'),
-        }
-      });
-    } else {
-      // Navigate to closed dates settings
-      navigate('/settings', {
-        state: {
-          openTab: 1, // Closed dates tab
-          startDate: format(start, 'yyyy-MM-dd'),
-          endDate: format(end, 'yyyy-MM-dd'),
-          note: note || undefined,
-        }
-      });
-    }
+    // For closed dates (no person selected), navigate to settings
+    navigate('/settings', {
+      state: {
+        openTab: 1, // Closed dates tab
+        startDate: format(start, 'yyyy-MM-dd'),
+        endDate: format(end, 'yyyy-MM-dd'),
+        note: note || undefined,
+      }
+    });
+
+    // Reset selection
+    setSelectionStart(null);
+    setSelectionEnd(null);
+    setSelectedDates([]);
+  };
+
+  const handleLeaveBooked = () => {
+    // Refresh calendar data
+    const fetchData = async () => {
+      try {
+        const leaveResponse = await axios.get(
+          '/api/leave',
+          { withCredentials: true }
+        );
+        const leaveData = leaveResponse.data.leaveRecords || leaveResponse.data;
+        setLeaveRecords(Array.isArray(leaveData) ? leaveData : []);
+      } catch (error) {
+        console.error('Error refreshing leave data:', error);
+      }
+    };
+
+    fetchData();
 
     // Reset selection
     setSelectionStart(null);
@@ -526,10 +523,10 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
             <Box
               data-date={format(currentDay, 'yyyy-MM-dd')}
               sx={{
-                minHeight: '80px',
+                minHeight: { xs: '70px', sm: '80px' },
                 border: '1px solid',
                 borderColor: isDateSelected(currentDay) ? 'primary.main' : 'divider',
-                p: 0.5,
+                p: { xs: 0.5, sm: 0.5 },
                 backgroundColor: isDateSelected(currentDay)
                   ? 'primary.light'
                   : isCurrentMonth
@@ -561,6 +558,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                   color: isSameDay(currentDay, new Date())
                     ? 'primary.main'
                     : 'text.primary',
+                  fontSize: { xs: '0.75rem', sm: '0.75rem' },
                 }}
               >
                 {format(currentDay, 'd')}
@@ -572,10 +570,13 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                   label={holiday.name}
                   size="small"
                   sx={{
-                    fontSize: '0.65rem',
-                    height: '18px',
+                    fontSize: { xs: '0.625rem', sm: '0.65rem' },
+                    height: { xs: '18px', sm: '18px' },
                     mb: 0.5,
                     backgroundColor: 'warning.light',
+                    '& .MuiChip-label': {
+                      px: { xs: 0.5, sm: 1 },
+                    },
                   }}
                 />
               )}
@@ -587,13 +588,16 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                   size="small"
                   onClick={(e) => handleClosedDateClick(closed, e)}
                   sx={{
-                    fontSize: '0.65rem',
-                    height: '18px',
+                    fontSize: { xs: '0.625rem', sm: '0.65rem' },
+                    height: { xs: '18px', sm: '18px' },
                     mb: 0.5,
                     backgroundColor: 'error.light',
                     cursor: 'pointer',
                     '&:hover': {
                       backgroundColor: 'error.main',
+                    },
+                    '& .MuiChip-label': {
+                      px: { xs: 0.5, sm: 1 },
                     },
                   }}
                 />
@@ -608,11 +612,14 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                     label={user?.username || 'Unknown'}
                     size="small"
                     sx={{
-                      fontSize: '0.65rem',
-                      height: '18px',
+                      fontSize: { xs: '0.625rem', sm: '0.65rem' },
+                      height: { xs: '18px', sm: '18px' },
                       mb: 0.5,
                       backgroundColor: getUserColor(leave.userId),
                       color: 'white',
+                      '& .MuiChip-label': {
+                        px: { xs: 0.5, sm: 1 },
+                      },
                     }}
                   />
                 );
@@ -648,21 +655,21 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
   }
 
   return (
-    <Paper elevation={2} sx={{ p: 3 }}>
+    <Paper elevation={2} sx={{ p: { xs: 1.5, sm: 3 } }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <IconButton onClick={handlePreviousMonth}>
+        <IconButton onClick={handlePreviousMonth} size="small" sx={{ minWidth: '44px', minHeight: '44px' }}>
           <ChevronLeftIcon />
         </IconButton>
         <Button
           onClick={handleOpenDatePicker}
-          startIcon={<CalendarTodayIcon />}
-          sx={{ textTransform: 'none' }}
+          startIcon={<CalendarTodayIcon sx={{ display: { xs: 'none', sm: 'block' } }} />}
+          sx={{ textTransform: 'none', minHeight: '44px' }}
         >
-          <Typography variant="h6">
+          <Typography variant="h6" sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
             {format(currentMonth, 'MMMM yyyy')}
           </Typography>
         </Button>
-        <IconButton onClick={handleNextMonth}>
+        <IconButton onClick={handleNextMonth} size="small" sx={{ minWidth: '44px', minHeight: '44px' }}>
           <ChevronRightIcon />
         </IconButton>
       </Box>
@@ -680,8 +687,8 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
           horizontal: 'center',
         }}
       >
-        <Box sx={{ p: 2, display: 'flex', gap: 2, minWidth: 400 }}>
-          <FormControl sx={{ minWidth: 80 }}>
+        <Box sx={{ p: 2, display: 'flex', gap: 2, minWidth: { xs: 280, sm: 400 }, flexDirection: { xs: 'column', sm: 'row' } }}>
+          <FormControl sx={{ minWidth: { xs: '100%', sm: 80 } }}>
             <InputLabel>Day</InputLabel>
             <Select
               value={currentMonth.getDate()}
@@ -716,7 +723,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
               <MenuItem value={11}>December</MenuItem>
             </Select>
           </FormControl>
-          <FormControl sx={{ minWidth: 100 }}>
+          <FormControl sx={{ minWidth: { xs: '100%', sm: 100 } }}>
             <InputLabel>Year</InputLabel>
             <Select
               value={currentMonth.getFullYear()}
@@ -757,6 +764,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
           selectedPersonId={selectedPersonId}
           onConfirm={handleSelectionConfirm}
           onCancel={handleSelectionCancel}
+          onLeaveBooked={handleLeaveBooked}
         />
       )}
     </Paper>

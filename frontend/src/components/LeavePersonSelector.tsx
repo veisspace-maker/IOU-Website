@@ -75,24 +75,37 @@ const LeavePersonSelector: React.FC<LeavePersonSelectorProps> = ({
         {users.map((user) => {
           const isSelected = selectedPersonId === user.id;
           const isDisabled = selectedPersonId !== null && selectedPersonId !== user.id;
+          const isGrey = ['danik', 'lev'].includes(user.username.toLowerCase());
           
           return (
             <Button
               key={user.id}
               variant={isSelected ? 'contained' : 'outlined'}
-              color="primary"
               onClick={() => handleClick(user.id)}
               sx={{
                 minWidth: '150px',
                 opacity: isDisabled ? 0.3 : 1,
                 transition: 'all 0.3s ease',
-                '&:hover': {
-                  transform: isDisabled ? 'none' : 'scale(1.05)',
-                },
+                ...(isGrey ? {
+                  color: isSelected ? '#fff' : '#757575',
+                  backgroundColor: isSelected ? '#757575' : 'transparent',
+                  borderColor: '#757575',
+                  '&:hover': {
+                    backgroundColor: isSelected ? '#616161' : 'rgba(117,117,117,0.08)',
+                    borderColor: '#616161',
+                    transform: isDisabled ? 'none' : 'scale(1.05)',
+                  },
+                } : {
+                  color: 'primary',
+                  '&:hover': {
+                    transform: isDisabled ? 'none' : 'scale(1.05)',
+                  },
+                }),
                 '&:focus': {
                   transform: isDisabled ? 'none' : 'scale(1.05)',
                 },
               }}
+              {...(!isGrey && { color: 'primary' as const })}
             >
               {user.username}
             </Button>
