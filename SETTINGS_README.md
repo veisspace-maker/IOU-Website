@@ -607,18 +607,22 @@ CREATE TABLE sales_items (
 
 ### Unit Tests
 - `AccountSettings.test.tsx`: Account management UI
-- `PublicHolidaysManager.test.tsx`: Holiday management
+- `PublicHolidaysManager.test.tsx`: Holiday management with import
 - `ClosedDatesManager.test.tsx`: Closed dates management
 - `BirthdaysManager.test.tsx`: Birthday management
+- `NotificationSettings.test.tsx`: Notification preferences
+- `SalesItemsManager.test.tsx`: Sales items management
 - `passwordValidation.test.ts`: Password strength validation
-- `twoFactor.test.ts`: 2FA functionality
+- `twoFactor.test.ts`: 2FA functionality (TOTP)
 
 ### Integration Tests
-- `auth.test.ts`: Authentication endpoints
+- `auth.test.ts`: Authentication endpoints (login, logout, 2FA)
 - `users.test.ts`: User management endpoints
 - `holidays.test.ts`: Holiday endpoints
+- `holidayImport.test.ts`: Holiday bulk import functionality
 - `closedDates.test.ts`: Closed dates endpoints
 - `birthdays.test.ts`: Birthday endpoints
+- `salesItems.test.ts`: Sales items endpoints
 
 ## Mobile Responsiveness
 
@@ -675,11 +679,18 @@ CREATE TABLE sales_items (
 
 ### Importing Public Holidays
 1. Navigate to Settings → Public Holidays
-2. Click "Import Holidays"
-3. Select country from dropdown
-4. Enter year
-5. Click "Import"
-6. Review import results (inserted and skipped)
+2. Click "Import Holidays" button
+3. Select country from dropdown list (e.g., Australia, United States)
+4. Enter year for import (e.g., 2026)
+5. Click "Import" button
+6. Review import results showing:
+   - Number of holidays inserted
+   - Number of holidays skipped (duplicates)
+   - List of inserted holidays with names and dates
+   - List of skipped holidays with skip reasons
+7. Imported holidays automatically integrate with leave calculations
+
+**Note**: The import uses the Nager.Date API and filters out non-public holidays (observances). Duplicate holidays are automatically detected and skipped.
 
 ### Managing Sales Items
 1. Navigate to Settings → Sales Items
@@ -690,17 +701,21 @@ CREATE TABLE sales_items (
 
 ## Future Enhancements
 
-- Role-based access control
-- Password reset via email
-- Account recovery options
-- Audit log for settings changes
-- Holiday templates by region/state
-- Birthday reminder emails and SMS
-- Custom calendar color schemes
-- Multi-language support
-- Dark mode
-- Export/import settings
-- Bulk sales item import from CSV
-- Sales item categories and tags
-- Item price history tracking
-- Automated holiday updates
+- Role-based access control (admin, manager, employee roles)
+- Password reset via email with secure tokens
+- Account recovery options (security questions, backup email)
+- Audit log for settings changes with timestamps
+- Holiday templates by region/state (auto-populate based on location)
+- Birthday reminder emails and SMS notifications
+- Custom calendar color schemes and themes
+- Multi-language support (i18n)
+- Dark mode with user preference
+- Export/import settings to JSON for backup
+- Bulk sales item import from CSV files
+- Sales item categories and tags for organization
+- Item price history tracking and analytics
+- Automated holiday updates from external APIs
+- User profile pictures and avatars
+- Custom notification schedules (not just birthdays)
+- Integration with external calendar systems (Google Calendar, Outlook)
+- Advanced password policies (expiry, history, complexity rules)

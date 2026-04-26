@@ -282,15 +282,22 @@ When a sale is created:
 ## Testing
 
 ### Unit Tests
-- `AddSalesTransactionForm.test.tsx`: Form validation and submission
+- `AddSalesTransactionForm.test.tsx`: Form validation and submission with quantity
 - `SalesTransactionList.test.tsx`: List rendering and interactions
 - `salesApi.test.ts`: API client functionality
-- `SalesPage.test.tsx`: Page integration
-- `salesCalculations.test.ts`: Business logic calculations
+- `SalesPage.test.tsx`: Page integration with tabs
+- `salesCalculations.test.ts`: Business logic calculations with quantity
+- `ItemBreakdownTable.test.tsx`: Item statistics display
+- `ItemFilter.test.tsx`: Item filtering functionality
+- `SalesStatsCards.test.tsx`: Summary statistics cards
 
 ### Property-Based Tests
 - `SalesTransactionList.pbt.test.tsx`: List behavior with random data
 - `salesUtils.pbt.test.ts`: Utility function edge cases
+- `salesTransactions.pbt.test.ts`: API endpoint property tests
+- Uses fast-check library with minimum 100 iterations per property
+- Tests tagged with format: `// Feature: sales-tracker, Property {number}: {description}`
+- Validates universal properties across all valid inputs
 
 ## Mobile Responsiveness
 
@@ -351,17 +358,20 @@ When a sale is recorded:
 1. Sales Tracker creates the sale transaction with item, price, quantity, seller, and date
 2. Calculates total amount: `price × quantity`
 3. Automatically creates debt transaction: `2masters → seller` for the total amount
-4. Debt description includes: `Sale: {item} (Qty: {quantity} × {price} = {total}) - {description}`
+4. Debt description includes: `Sale: {item} (Qty: {quantity} × ${price} = ${total}) - {description}`
 5. This represents that the seller received company money (including the other person's 50% share)
-6. The Debt Tracker applies 50/50 split logic to calculate who owes whom
-7. Net debt updates automatically
+6. The Debt Tracker applies 50/50 split logic to calculate who owes whom:
+   - Transaction `2masters → lev` means Lev received shared money, so Danik owes Lev half
+   - Transaction `2masters → danik` means Danik received shared money, so Lev owes Danik half
+7. Net debt updates automatically to reflect the sale
 
 **Example**: If Leva sells 3 widgets at $10 each:
 - Sales transaction: 3 widgets @ $10 = $30 by Leva
-- Debt transaction: `2masters → lev` for $30 with description "Sale: widget (Qty: 3 × 10.00 = 30.00)"
-- Debt calculation: Danik owes Lev $15 (his half of the company money)
+- Debt transaction: `2masters → lev` for $30 with description "Sale: widget (Qty: 3 × $10.00 = $30.00)"
+- Debt calculation: Danik owes Lev $15 (his half of the company money that Lev received)
+- If Lev already owed Danik $20, the new net debt would be: Lev owes Danik $5
 
-This ensures financial records stay synchronized between sales and debts.
+This ensures financial records stay synchronized between sales and debts, with automatic 50/50 split calculations for company money.
 
 ## Database Schema
 
@@ -394,15 +404,19 @@ CREATE INDEX idx_sales_items_name ON sales_items(LOWER(name));
 
 ## Future Enhancements
 
-- Export to CSV/Excel with custom date ranges
-- Advanced date range filtering
-- Seller comparison reports and analytics
-- Profit margin tracking and analysis
-- Inventory integration
-- Receipt photo attachments
-- Bulk import functionality from CSV
-- Advanced analytics dashboard with charts
-- Sales forecasting
-- Customer tracking
+- Export to CSV/Excel with custom date ranges and filters
+- Advanced date range filtering with presets (this week, this month, etc.)
+- Seller comparison reports and analytics with charts
+- Profit margin tracking and analysis (cost vs. sale price)
+- Inventory integration with stock levels
+- Receipt photo attachments with cloud storage
+- Bulk import functionality from CSV files
+- Advanced analytics dashboard with interactive charts
+- Sales forecasting based on historical data
+- Customer tracking and repeat customer analysis
 - Discount and promotion tracking
-- Tax calculation and reporting
+- Tax calculation and reporting (GST/VAT)
+- Multi-location support for different stores
+- Sales targets and goal tracking
+- Commission calculations for sellers
+- Product categories and hierarchies

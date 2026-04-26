@@ -298,11 +298,15 @@ When public holidays or closed dates are modified:
 ### Unit Tests
 - `LeaveEntryForm.test.tsx`: Form validation and submission
 - `LeaveHistory.test.tsx`: List rendering and interactions
-- `LeaveCalendar.test.tsx`: Calendar functionality
-- `calculations.test.ts`: Business day calculations
+- `LeaveCalendar.test.tsx`: Calendar functionality and date selection
+- `calculations.test.ts`: Business day calculations with holidays and closed dates
 
 ### Property-Based Tests
 - `LeaveCalendar.pbt.test.tsx`: Calendar behavior with random dates
+- Uses fast-check library with minimum 100 iterations per property
+- Tests tagged with format: `// Feature: leave-tracker, Property {number}: {description}`
+- Validates universal properties across all valid inputs
+- Covers business day calculation edge cases
 
 ## Mobile Responsiveness
 
@@ -411,16 +415,20 @@ All dates are handled in the configured timezone (default: Australia/Melbourne):
 
 ## Future Enhancements
 
-- Leave balance tracking per employee
-- Annual leave allowance management
-- Leave approval workflow
-- Email notifications for leave requests
-- Calendar export (iCal format)
-- Leave type categorization (annual, sick, personal, unpaid)
-- Half-day leave support
-- Team leave calendar view
-- Leave request comments and notes
-- Manager approval system
-- Leave balance reports
-- Carry-over leave tracking
-- Leave accrual calculations
+- Leave balance tracking per employee with annual allowances
+- Annual leave allowance management and configuration
+- Leave approval workflow with manager approval
+- Email notifications for leave requests and approvals
+- Calendar export (iCal format) for external calendar apps
+- Leave type categorization (annual, sick, personal, unpaid, parental)
+- Half-day leave support with morning/afternoon options
+- Team leave calendar view showing all employees
+- Leave request comments and notes for context
+- Manager approval system with multi-level approval
+- Leave balance reports and analytics
+- Carry-over leave tracking year-to-year
+- Leave accrual calculations based on tenure
+- Public holiday substitution (when holiday falls on weekend)
+- Leave conflict resolution for overlapping requests
+- Automatic leave balance deduction
+- Leave history export to PDF/Excel
