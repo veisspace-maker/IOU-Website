@@ -39,3 +39,6 @@ coverage/
 
 # Misc
 *.tsbuildinfo
+
+# Local DB dumps (see docker-compose db-backup)
+backup/*.dump

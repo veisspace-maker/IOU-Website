@@ -33,8 +33,10 @@ async function setupDatabase() {
 
     for (const user of users) {
       await pool.query(
-        'INSERT INTO users (username, password_hash, two_factor_enabled) VALUES ($1, $2, $3)',
-        [user.username, user.passwordHash, false]
+        `INSERT INTO users (username, password_hash, pin_hash, two_factor_enabled)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (username) DO NOTHING`,
+        [user.username, user.passwordHash, null, false]
       );
       console.log(`✅ Created user: ${user.username}`);
     }

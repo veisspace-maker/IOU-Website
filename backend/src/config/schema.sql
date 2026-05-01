@@ -4,6 +4,7 @@ SET timezone = 'Australia/Melbourne';
 
 -- Drop tables if they exist (for development)
 DROP TABLE IF EXISTS transactions CASCADE;
+DROP TABLE IF EXISTS debt_transactions_v2 CASCADE;
 DROP TABLE IF EXISTS leave_records CASCADE;
 DROP TABLE IF EXISTS public_holidays CASCADE;
 DROP TABLE IF EXISTS closed_dates CASCADE;
@@ -15,6 +16,7 @@ CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   username VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
+  pin_hash VARCHAR(255),
   two_factor_secret VARCHAR(255),
   two_factor_enabled BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -37,6 +39,21 @@ CREATE TABLE transactions (
     (transaction_type = 'personal' AND from_user_id IS NOT NULL) OR
     (transaction_type = 'company' AND from_user_id IS NULL)
   )
+);
+
+-- Debt transactions v2 table
+CREATE TABLE debt_transactions_v2 (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  from_entity TEXT NOT NULL CHECK (
+    from_entity IN ('lev', 'danik', '2masters')
+  ),
+  to_entity TEXT NOT NULL CHECK (
+    to_entity IN ('lev', 'danik', '2masters')
+  ),
+  amount DECIMAL(10, 2) NOT NULL CHECK (amount > 0),
+  timestamp BIGINT NOT NULL,
+  description TEXT,
+  CONSTRAINT different_entities CHECK (from_entity != to_entity)
 );
 
 -- Leave records table
@@ -84,6 +101,7 @@ CREATE TABLE birthdays (
 CREATE INDEX idx_transactions_from_user ON transactions(from_user_id);
 CREATE INDEX idx_transactions_to_user ON transactions(to_user_id);
 CREATE INDEX idx_transactions_date ON transactions(date);
+CREATE INDEX idx_debt_transactions_v2_timestamp ON debt_transactions_v2(timestamp DESC);
 CREATE INDEX idx_leave_records_user ON leave_records(user_id);
 CREATE INDEX idx_leave_records_dates ON leave_records(start_date, end_date);
 CREATE INDEX idx_public_holidays_date ON public_holidays(date);
@@ -125,6 +143,7 @@ INSERT INTO users (username, password_hash, two_factor_enabled) VALUES
 
 COMMENT ON TABLE users IS 'Stores user authentication and profile information';
 COMMENT ON TABLE transactions IS 'Records money transfers between users';
+COMMENT ON TABLE debt_transactions_v2 IS 'Transaction-based debt tracking for Lev, Danik, and 2Masters';
 COMMENT ON TABLE leave_records IS 'Tracks employee leave with business day calculations';
 COMMENT ON TABLE public_holidays IS 'Stores nationally recognized holidays';
 COMMENT ON TABLE closed_dates IS 'Stores company closure periods';
