@@ -160,8 +160,9 @@ The application provides a unified interface for financial tracking, HR manageme
 - `PublicHolidayWidget.tsx` - Upcoming holidays widget
 
 **API Endpoints:**
-- `/api/auth/*` - Authentication (login, logout, 2FA, verify-2fa, setup-2fa, enable-2fa, disable-2fa)
-- `/api/users/*` - User management (list, update, set-pin)
+- `/api/auth/*` - Authentication (login, logout, verify-2fa, `/2fa/setup`, `/2fa/enable`, `/2fa/disable`)
+- `/api/users/*` - User management (list, update own profile)
+
 - `/api/holidays/*` - Holidays CRUD
 - `/api/holiday-import/*` - Holiday bulk import (import, countries)
 - `/api/closed-dates/*` - Closed dates CRUD
@@ -271,7 +272,11 @@ npm install
 Backend `.env`:
 ```env
 PORT=3001
-DATABASE_URL=postgresql://user:password@localhost:5432/iou_db
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=company_tracker
+DB_USER=postgres
+DB_PASSWORD=postgres
 DB_TIMEZONE=Australia/Melbourne
 SESSION_SECRET=your-secret-key-change-in-production
 NODE_ENV=development
@@ -310,13 +315,13 @@ npm run dev
 ```
 
 6. **Access the application**
-- Frontend: http://localhost:5173
+- Frontend: http://localhost:5176 (see `frontend/vite.config.ts` `server.port`)
 - Backend API: http://localhost:3001
 - Health Check: http://localhost:3001/health
 
 ### Initial Setup
 
-1. Create your first user account through the login page
+1. Sign in using users seeded by `npm run setup-db` (initial password printed by that script); change passwords afterward
 2. Configure public holidays in Settings
 3. Add any company closed dates
 4. Start tracking sales, debts, and leave!
@@ -686,11 +691,18 @@ npm run build
 **Production Backend (.env):**
 ```env
 PORT=3001
-DATABASE_URL=postgresql://user:password@host:5432/db
+DB_HOST=your-db-host
+DB_PORT=5432
+DB_NAME=company_tracker
+DB_USER=postgres
+DB_PASSWORD=<secret>
 DB_TIMEZONE=Australia/Melbourne
 SESSION_SECRET=<strong-random-secret-change-this>
 NODE_ENV=production
+FRONTEND_ORIGINS=https://your-frontend-origin
+COOKIE_SECURE=false
 ```
+(Set `COOKIE_SECURE=true` when the API is only reached over HTTPS.)
 
 **Production Frontend (.env):**
 ```env
@@ -707,11 +719,7 @@ npm run setup-db
 # Or manually run: backend/src/config/schema.sql
 ```
 
-3. Initialize users:
-```bash
-npm run init-users
-# Creates default Leva and Danik users
-```
+3. Optional — extra seed scripts (only if needed): run `npx tsx src/scripts/initUsers.ts` from `backend/` (default users are already created by `setup-db`).
 
 ### Deployment Options
 

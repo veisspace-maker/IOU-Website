@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { isAuthenticated } from '../middleware/auth';
 import pool from '../config/database';
-import { User } from '../types/models';
+import { SessionUser } from '../types/models';
 import { validatePassword, hashPassword } from '../utils/passwordValidation';
 
 const router = Router();
@@ -37,7 +37,7 @@ router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { username, password, currentPassword } = req.body;
-    const currentUser = req.user as User;
+    const currentUser = req.user as SessionUser;
 
     // Users can only update their own account
     if (currentUser.id !== id) {

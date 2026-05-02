@@ -1,13 +1,18 @@
 // Data model interfaces for IOU
 
-export interface User {
+/** Subset attached to req.user — never includes password or TOTP secret */
+export interface SessionUser {
   id: string;
   username: string;
-  passwordHash: string;
-  twoFactorSecret?: string;
   twoFactorEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/** Full user row shape used during login / Passport local verification */
+export interface User extends SessionUser {
+  passwordHash: string;
+  twoFactorSecret?: string;
 }
 
 export interface Transaction {

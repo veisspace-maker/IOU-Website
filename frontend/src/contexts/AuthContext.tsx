@@ -36,19 +36,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Configure axios to include credentials
-  axios.defaults.withCredentials = true;
-  
-  // Set baseURL based on environment
-  // In development on localhost, Vite proxy handles /api requests
-  // On mobile/network access, we need to explicitly set the backend URL
-  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    // Use environment variable if set, otherwise construct from current hostname
-    const apiUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5175`;
-    axios.defaults.baseURL = apiUrl;
-    console.log('Using API URL:', apiUrl);
-  }
-
   // Check authentication status on mount
   useEffect(() => {
     checkAuth();

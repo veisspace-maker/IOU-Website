@@ -13,6 +13,6 @@ COPY backend ./backend
 
 WORKDIR /app/backend
 
-EXPOSE 5175
+EXPOSE 3001
 
 CMD ["sh", "-c", "npx tsx src/scripts/ensureRuntimeSchema.ts && npx tsx src/index.ts"]

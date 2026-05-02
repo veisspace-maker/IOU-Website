@@ -67,13 +67,13 @@ This installs dependencies for both frontend and backend workspaces.
 
 ### 2. Database Setup
 
-Create a PostgreSQL database:
+Create a PostgreSQL database (name should match `DB_NAME` in `backend/.env`, default below):
 
 ```bash
-createdb iou_db
+createdb company_tracker
 ```
 
-Set up the database schema and initial data:
+Set up the database schema and seed users:
 
 ```bash
 cd backend
@@ -83,7 +83,7 @@ npm run setup-db
 This script will:
 - Create all required tables
 - Set up indexes and constraints
-- Initialize the database structure
+- Seed default users (see script output for the initial password — change it after login)
 
 ### 3. Environment Configuration
 
@@ -93,14 +93,24 @@ This script will:
 cp backend/.env.example backend/.env
 ```
 
-Edit `backend/.env`:
+Edit `backend/.env` (mirrors variables used by `backend/src/config/database.ts`):
+
 ```env
 PORT=3001
-DATABASE_URL=postgresql://user:password@localhost:5432/iou_db
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=company_tracker
+DB_USER=postgres
+DB_PASSWORD=postgres
 DB_TIMEZONE=Australia/Melbourne
 SESSION_SECRET=your-secret-key-change-in-production
 NODE_ENV=development
 ```
+
+Optional production-oriented variables:
+
+- **`FRONTEND_ORIGINS`** — Comma-separated allowed browser origins for CORS (e.g. `https://app.example.com`). If unset, all origins are allowed (fine for trusted LAN dev; set this when exposing the API broadly).
+- **`COOKIE_SECURE`** — Set to `true` only when clients use **HTTPS** to reach the API (otherwise the session cookie would not be stored).
 
 **Frontend** - Copy and configure:
 
@@ -108,9 +118,17 @@ NODE_ENV=development
 cp frontend/.env.example frontend/.env
 ```
 
-Edit `frontend/.env`:
+Edit `frontend/.env` (optional on localhost — Vite proxies `/api` to the backend):
+
 ```env
+# Needed when opening the UI by LAN IP (not localhost); defaults to http://<hostname>:3001
 VITE_API_URL=http://localhost:3001
+```
+
+Dev proxy target defaults to `http://localhost:3001`. Override if needed:
+
+```env
+VITE_API_PROXY_TARGET=http://localhost:3001
 ```
 
 ### 4. Start Development Servers
@@ -127,22 +145,28 @@ Or start them separately:
 # Backend (runs on port 3001)
 npm run dev:backend
 
-# Frontend (runs on port 5173)
+# Frontend (Vite dev server — port 5176)
 npm run dev:frontend
 ```
 
 ### 5. Access the Application
 
-- Frontend: http://localhost:5173
+- Frontend: http://localhost:5176
 - Backend API: http://localhost:3001
 - Health Check: http://localhost:3001/health
 
 ### 6. Initial Setup
 
-1. Create your first user account through the login page
+1. Sign in with a user created by `npm run setup-db` (password printed in the script output), then change passwords in Settings
 2. Configure public holidays in Settings
 3. Add any company closed dates
 4. Start tracking sales, debts, and leave!
+
+### Docker Compose
+
+Backend listens on **port 3001** on the host (`docker-compose.yml`). The frontend nginx container proxies `/api` to the backend. After changing compose env vars, rebuild images if needed.
+
+Local **npm** dev (without Docker) uses the same API port **3001** so the Vite proxy and LAN defaults stay aligned.
 
 ## Development
 
@@ -151,6 +175,7 @@ npm run dev:frontend
 **Root:**
 - `npm run dev` - Start both frontend and backend
 - `npm test` - Run all tests
+- `npm run test:watch` - Vitest watch mode in frontend and backend workspaces
 - `npm run dev:backend` - Start backend only
 - `npm run dev:frontend` - Start frontend only
 
@@ -159,7 +184,8 @@ npm run dev:frontend
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm test` - Run tests
-- `npm run setup-db` - Initialize database
+- `npm run setup-db` - Initialize database (from `backend/` or `npm run setup-db --workspace=backend`)
+- `npm run migrate` - Legacy migration helper (`migrate.js`; only if you still need old schema patches)
 
 **Frontend:**
 - `npm run dev` - Start development server
@@ -251,9 +277,9 @@ All tables use UUID primary keys and include `created_at` and `updated_at` times
 - `POST /api/auth/logout` - User logout
 - `GET /api/auth/me` - Get current user
 - `POST /api/auth/verify-2fa` - Verify 2FA code
-- `POST /api/auth/setup-2fa` - Setup 2FA
-- `POST /api/auth/enable-2fa` - Enable 2FA
-- `POST /api/auth/disable-2fa` - Disable 2FA
+- `POST /api/auth/2fa/setup` - Setup 2FA (authenticated)
+- `POST /api/auth/2fa/enable` - Enable 2FA after TOTP verification
+- `POST /api/auth/2fa/disable` - Disable 2FA (requires password in body)
 
 ### Sales Transactions
 - `GET /api/sales` - List sales (paginated)
@@ -298,8 +324,9 @@ All tables use UUID primary keys and include `created_at` and `updated_at` times
 
 ### User Management
 - `GET /api/users` - List users
-- `PUT /api/users/:id` - Update user
-- `POST /api/users/:id/set-pin` - Set user PIN
+- `PUT /api/users/:id` - Update user (username/password; requires current password)
+
+PIN login support uses hashed PINs in the database; set or change a PIN via `backend/src/scripts/setPin.ts` (`npx tsx src/scripts/setPin.ts`), not via a REST endpoint.
 
 ## Testing
 
@@ -308,16 +335,12 @@ Run all tests:
 npm test
 ```
 
-Run tests with coverage:
-```bash
-cd frontend && npm run test:coverage
-cd backend && npm run test:coverage
-```
-
-Run tests in watch mode:
+Run tests in watch mode (from repo root):
 ```bash
 npm run test:watch
 ```
+
+Optional coverage: install `@vitest/coverage-v8` in a workspace, then run `npx vitest run --coverage` from that workspace.
 
 ## Timezone Configuration
 
@@ -360,7 +383,9 @@ npm run build
 
 ### Environment Variables
 
-Set `NODE_ENV=production` and use strong secrets for `SESSION_SECRET`.
+Set `NODE_ENV=production` and a strong random `SESSION_SECRET` (the server **refuses to start** in production if `SESSION_SECRET` is unset or still set to the example default shipped in code).
+
+Use **`FRONTEND_ORIGINS`** for an explicit CORS allowlist, and **`COOKIE_SECURE=true`** when clients reach the API over HTTPS.
 
 ### Database Migration
 
@@ -368,6 +393,8 @@ Set `NODE_ENV=production` and use strong secrets for `SESSION_SECRET`.
 cd backend
 npm run migrate
 ```
+
+`migrate.js` targets legacy schema changes (e.g. old `transactions` table). Prefer `npm run setup-db` for fresh installs; only run `migrate` if you know your database needs those specific ALTER statements.
 
 ## Documentation
 

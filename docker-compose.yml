@@ -20,7 +20,7 @@ services:
       dockerfile: backend/Dockerfile
     container_name: iou-backend
     environment:
-      PORT: 5175
+      PORT: 3001
       NODE_ENV: production
       DB_HOST: db
       DB_PORT: 5432
@@ -29,11 +29,13 @@ services:
       DB_PASSWORD: postgres
       DB_TIMEZONE: Australia/Melbourne
       SESSION_SECRET: change-me-in-production
+      # Set COOKIE_SECURE=true when serving the API behind HTTPS only
+      COOKIE_SECURE: 'false'
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "5175:5175"
+      - "3001:3001"
 
   frontend:
     build:

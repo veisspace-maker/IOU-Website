@@ -468,18 +468,18 @@ Log out current user.
 #### GET /api/auth/me
 Get current user information.
 
-#### POST /api/auth/setup-2fa
-Generate 2FA secret and QR code.
+#### POST /api/auth/2fa/setup
+Generate 2FA secret and QR code URL (authenticated).
 
 **Response:**
 ```json
 {
   "secret": "base32-secret",
-  "qrCode": "data:image/png;base64,..."
+  "qrCodeUrl": "otpauth://totp/..."
 }
 ```
 
-#### POST /api/auth/enable-2fa
+#### POST /api/auth/2fa/enable
 Enable 2FA after verification.
 
 **Request Body:**
@@ -489,13 +489,13 @@ Enable 2FA after verification.
 }
 ```
 
-#### POST /api/auth/disable-2fa
-Disable 2FA.
+#### POST /api/auth/2fa/disable
+Disable 2FA (requires account password).
 
 **Request Body:**
 ```json
 {
-  "token": "123456"
+  "password": "your-password"
 }
 ```
 
@@ -504,7 +504,7 @@ Disable 2FA.
 ### API Endpoints
 
 #### GET /api/users
-List all users (admin only).
+List all users (authenticated).
 
 #### PUT /api/users/:id
 Update user information.
@@ -517,14 +517,12 @@ Update user information.
 }
 ```
 
-#### POST /api/users/:id/set-pin
-Set or update user PIN.
+#### User PIN (CLI script)
 
-**Request Body:**
-```json
-{
-  "pin": "1234"
-}
+There is **no** `POST /api/users/:id/set-pin` HTTP endpoint. To set a PIN for login-alternate authentication, run from `backend/`:
+
+```bash
+npx tsx src/scripts/setPin.ts
 ```
 
 ## Database Schema
