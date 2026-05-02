@@ -52,7 +52,8 @@ iou-application/
 
 ## Prerequisites
 
-- Node.js 18+ and npm
+- **Node.js 20 LTS or newer** (recommended). Several frontend dev dependencies (e.g. Vitest/jsdom, Workbox) declare `engines` that require Node 20+; on **Node 18** `npm install` may still succeed but print `EBADENGINE` warnings.
+- npm (comes with Node)
 - PostgreSQL 14+
 
 ## Quick Start
