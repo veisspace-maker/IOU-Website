@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'IOU Tracker',
-        short_name: 'IOU',
+        name: 'UOMe Tracker',
+        short_name: 'UOMe',
         description: 'Track debts, sales, leave, and company information',
         theme_color: '#1976d2',
         background_color: '#ffffff',

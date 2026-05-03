@@ -73,7 +73,7 @@ export default function PWAInstallPrompt() {
           </>
         }
       >
-        Install IOU Tracker for quick access!
+        Install UOMe Tracker for quick access!
       </Alert>
     </Snackbar>
   );

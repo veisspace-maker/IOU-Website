@@ -44,7 +44,7 @@ Visit `http://localhost:4173` (or the port shown)
 
 #### Install Prompt
 - Look for install icon in browser address bar (Chrome/Edge)
-- Or check for "Install IOU Tracker" notification at bottom
+- Or check for "Install UOMe Tracker" notification at bottom
 
 #### Offline Mode
 1. Open Chrome DevTools (F12)

@@ -1,4 +1,4 @@
--- IOU Database Schema
+-- UOMe Database Schema
 -- Set timezone for this session (should match DB_TIMEZONE environment variable)
 SET timezone = 'Australia/Melbourne';
 

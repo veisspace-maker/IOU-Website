@@ -1,7 +1,7 @@
 {
   "name": "frontend",
   "version": "1.0.0",
-  "description": "Frontend for IOU",
+  "description": "Frontend for UOMe",
   "type": "module",
   "scripts": {
     "dev": "vite",

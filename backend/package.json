@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Backend API for IOU",
+  "description": "Backend API for UOMe",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",

@@ -88,7 +88,7 @@ const LoginPage: React.FC = () => {
       >
         <Paper elevation={3} sx={{ padding: { xs: 3, md: 4 }, width: '100%' }}>
           <Typography component="h1" variant="h4" align="center" gutterBottom>
-            IOU
+            UOMe
           </Typography>
 
           {!showTwoFactor ? (

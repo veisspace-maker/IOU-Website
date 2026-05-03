@@ -1,4 +1,4 @@
-// Data model interfaces for IOU
+// Data model interfaces for UOMe
 
 export interface User {
   id: string;

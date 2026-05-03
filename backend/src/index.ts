@@ -59,7 +59,7 @@ app.get('/health', async (req, res) => {
 
 // API routes will be added here
 app.get('/api', (req, res) => {
-  res.json({ message: 'IOU API' });
+  res.json({ message: 'UOMe API' });
 });
 
 // Authentication routes

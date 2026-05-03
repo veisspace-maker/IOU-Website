@@ -17,16 +17,16 @@
         function drawIcon(canvas, size) {
             const ctx = canvas.getContext('2d');
             
-            // Background
-            ctx.fillStyle = '#1976d2';
+            // Background - black like the SVG icon
+            ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, size, size);
             
             // Text
             ctx.fillStyle = '#ffffff';
-            ctx.font = `bold ${size * 0.4}px Arial`;
+            ctx.font = `bold ${size * 0.3}px Arial`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('IOU', size / 2, size / 2);
+            ctx.fillText('UOMe', size / 2, size / 2);
         }
 
         function download(canvas, filename) {
