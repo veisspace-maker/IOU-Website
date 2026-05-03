@@ -1,13 +1,29 @@
 import pool from '../config/database';
+import { setupDatabase } from './setupDatabase';
 
 async function ensureRuntimeSchema() {
   try {
     console.log('Ensuring runtime schema...');
 
-    // Auth queries this column; make sure it exists for older DB volumes.
-    await pool.query(
-      'ALTER TABLE users ADD COLUMN IF NOT EXISTS pin_hash VARCHAR(255)'
-    );
+    const { rows } = await pool.query<{ exists: boolean }>(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'users'
+      ) AS exists
+    `);
+    const usersTableExists = rows[0]?.exists === true;
+
+    if (!usersTableExists) {
+      console.log(
+        'No public.users table found; running full schema setup and default users...'
+      );
+      await setupDatabase();
+    } else {
+      // Auth queries this column; make sure it exists for older DB volumes.
+      await pool.query(
+        'ALTER TABLE users ADD COLUMN IF NOT EXISTS pin_hash VARCHAR(255)'
+      );
+    }
 
     // Debt tracker v2 relies on this table.
     await pool.query(`
