@@ -1,0 +1,87 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: iou-db
+    environment:
+      POSTGRES_DB: company_tracker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d company_tracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: iou-backend
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: company_tracker
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_TIMEZONE: Australia/Melbourne
+      SESSION_SECRET: change-me-in-production
+      # Set COOKIE_SECURE=true when serving the API behind HTTPS only
+      COOKIE_SECURE: 'false'
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: iou-frontend
+    environment:
+      VITE_COMPANY_TIMEZONE: Australia/Melbourne
+    depends_on:
+      - backend
+    ports:
+      - "4173:4173"
+
+  # Daily logical backup (PostgreSQL custom format). Files: ./backup/iou_<timestamp>.dump
+  # Restore example: pg_restore --clean --if-exists -h db -U postgres -d company_tracker /backup/iou_....dump
+  db-backup:
+    image: postgres:16-alpine
+    container_name: iou-db-backup
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: postgres
+      PGUSER: postgres
+      PGDATABASE: company_tracker
+      PGHOST: db
+    volumes:
+      - ./backup:/backup
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        trap exit TERM
+        until pg_isready -h db -U postgres -d company_tracker >/dev/null 2>&1; do
+          sleep 2
+        done
+        echo "PostgreSQL ready; backups under /backup"
+        while true; do
+          ts="$$(date +%Y%m%d_%H%M%S)"
+          out="/backup/iou_$${ts}.dump"
+          echo "Starting backup $$out"
+          if pg_dump -Fc -f "$$out"; then echo "Backup finished $$out"
+          else echo "Backup failed (exit $$?)" >&2
+          fi
+          sleep 86400
+        done
+
+volumes:
+  pg_data:

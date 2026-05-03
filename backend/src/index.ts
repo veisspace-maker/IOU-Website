@@ -19,26 +19,59 @@ dotenv.config();
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
+const isProd = process.env.NODE_ENV === 'production';
+const defaultSessionSecret = 'company-tracker-secret-key-change-in-production';
+const sessionSecret = process.env.SESSION_SECRET || defaultSessionSecret;
 
-// Middleware
-app.use(cors({
-  origin: true, // Allow all origins for development
-  credentials: true,
-}));
+if (isProd && (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === defaultSessionSecret)) {
+  console.error(
+    'FATAL: Set SESSION_SECRET to a strong random value in production (not the example default).'
+  );
+  process.exit(1);
+}
+
+const corsAllowed = process.env.FRONTEND_ORIGINS?.split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!corsAllowed?.length) {
+        callback(null, true);
+        return;
+      }
+      if (!origin || corsAllowed.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Use COOKIE_SECURE=true only behind HTTPS (otherwise browsers omit the session cookie)
+const cookieSecure = process.env.COOKIE_SECURE === 'true';
+
+if (isProd) {
+  app.set('trust proxy', 1);
+}
 
 // Session configuration
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'company-tracker-secret-key-change-in-production',
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
+    proxy: isProd,
     cookie: {
-      secure: false, // Set to false for local network access (HTTP)
+      secure: cookieSecure,
       httpOnly: true,
-      maxAge: undefined, // Will be set dynamically based on "remember me" choice
-      // Don't set sameSite at all - let browser decide (most permissive for local dev)
+      maxAge: undefined,
+      sameSite: 'lax',
     },
   })
 );

@@ -2,7 +2,7 @@ import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import bcrypt from 'bcrypt';
 import pool from '../config/database';
-import { User } from '../types/models';
+import { SessionUser, User } from '../types/models';
 import { Request, Response, NextFunction } from 'express';
 
 // Configure Passport Local Strategy
@@ -56,11 +56,11 @@ passport.serializeUser((user: any, done: any) => {
   done(null, user.id);
 });
 
-// Deserialize user from session
+// Deserialize user from session (no credential material)
 passport.deserializeUser(async (id: string, done: any) => {
   try {
     const result = await pool.query(
-      'SELECT id, username, password_hash, pin_hash, two_factor_secret, two_factor_enabled, created_at, updated_at FROM users WHERE id = $1',
+      'SELECT id, username, two_factor_enabled, created_at, updated_at FROM users WHERE id = $1',
       [id]
     );
 
@@ -69,11 +69,9 @@ passport.deserializeUser(async (id: string, done: any) => {
     }
 
     const user = result.rows[0];
-    const userObj: User = {
+    const userObj: SessionUser = {
       id: user.id,
       username: user.username,
-      passwordHash: user.password_hash,
-      twoFactorSecret: user.two_factor_secret,
       twoFactorEnabled: user.two_factor_enabled,
       createdAt: user.created_at,
       updatedAt: user.updated_at,

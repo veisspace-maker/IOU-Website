@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Internal company web application for tracking money and leave",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "workspaces": [
     "frontend",
     "backend"
@@ -12,7 +15,8 @@
     "dev:backend": "npm run dev --workspace=backend",
     "dev:frontend": "npm run dev --workspace=frontend",
     "build": "npm run build --workspaces",
-    "test": "npm run test --workspaces"
+    "test": "npm run test --workspaces",
+    "test:watch": "concurrently \"npm run test:watch --workspace=backend\" \"npm run test:watch --workspace=frontend\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
