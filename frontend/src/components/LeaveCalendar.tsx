@@ -69,7 +69,6 @@ interface LeaveCalendarProps {
 const USER_COLORS: { [key: string]: string } = {
   'Leva': '#4caf50',    // Green
   'Danik': '#2196f3',   // Blue
-  '2 Masters': '#ff9800', // Orange
 };
 
 const DEFAULT_COLOR = '#4caf50';

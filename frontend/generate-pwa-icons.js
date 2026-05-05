@@ -22,7 +22,7 @@ function generateIcon(size, filename) {
   ctx.font = `bold ${size * 0.3}px Arial`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('UOMe', size / 2, size / 2);
+  ctx.fillText('UOMi', size / 2, size / 2);
 
   // Save
   const buffer = canvas.toBuffer('image/png');

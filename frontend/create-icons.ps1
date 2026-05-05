@@ -1,4 +1,4 @@
-# PowerShell script to create PNG icons with UOMe text
+# PowerShell script to create PNG icons with UOMi text
 Add-Type -AssemblyName System.Drawing
 
 function Create-Icon {
@@ -19,8 +19,8 @@ function Create-Icon {
     $blackBrush = [System.Drawing.Brushes]::Black
     $graphics.FillRectangle($blackBrush, 0, 0, $Size, $Size)
     
-    # Draw white text "UOMe"
-    $text = "UOMe"
+    # Draw white text "UOMi"
+    $text = "UOMi"
     $fontSize = [int]($Size * 0.3)
     $font = New-Object System.Drawing.Font("Arial", $fontSize, [System.Drawing.FontStyle]::Bold)
     $whiteBrush = [System.Drawing.Brushes]::White
@@ -45,7 +45,7 @@ function Create-Icon {
     Write-Host "Created $filepath" -ForegroundColor Green
 }
 
-Write-Host "`nGenerating PWA icons with 'UOMe' text..." -ForegroundColor Cyan
+Write-Host "`nGenerating PWA icons with 'UOMi' text..." -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
 try {

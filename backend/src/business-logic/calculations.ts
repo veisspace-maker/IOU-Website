@@ -175,3 +175,66 @@ export function checkClosedDateLeaveConflict(
     );
   });
 }
+
+/**
+ * Calculate leave owed between users
+ * Logic: When one user takes leave, the other user owes them that amount of leave
+ * Returns the net leave owed with debtor and creditor
+ */
+export interface LeaveOwedResult {
+  debtor: string | null;      // User who owes leave
+  creditor: string | null;    // User who is owed leave
+  amount: number;             // Number of business days owed
+}
+
+export function calculateLeaveOwed(
+  leaveRecords: LeaveRecord[],
+  users: Array<{ id: string; username: string }>
+): LeaveOwedResult {
+  // Create a map to track leave balance per user
+  const leaveBalance: Map<string, number> = new Map();
+  
+  // Initialize all users with 0 balance
+  users.forEach(user => {
+    leaveBalance.set(user.id, 0);
+  });
+  
+  // Calculate leave balance for each user
+  // When a user takes leave, they gain that many days (others owe them)
+  leaveRecords.forEach(leave => {
+    const currentBalance = leaveBalance.get(leave.userId) || 0;
+    leaveBalance.set(leave.userId, currentBalance + leave.businessDays);
+  });
+  
+  // For a 2-person system, calculate net leave owed
+  if (users.length === 2) {
+    const [user1, user2] = users;
+    const balance1 = leaveBalance.get(user1.id) || 0;
+    const balance2 = leaveBalance.get(user2.id) || 0;
+    
+    const netDifference = balance1 - balance2;
+    
+    if (netDifference > 0) {
+      // User1 took more leave, so User2 owes User1
+      return {
+        debtor: user2.id,
+        creditor: user1.id,
+        amount: netDifference
+      };
+    } else if (netDifference < 0) {
+      // User2 took more leave, so User1 owes User2
+      return {
+        debtor: user1.id,
+        creditor: user2.id,
+        amount: Math.abs(netDifference)
+      };
+    }
+  }
+  
+  // No debt or not a 2-person system
+  return {
+    debtor: null,
+    creditor: null,
+    amount: 0
+  };
+}

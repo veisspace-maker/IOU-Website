@@ -6,7 +6,7 @@ const path = require('path');
 function createSVG(size) {
   return `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
   <rect width="${size}" height="${size}" fill="#000000"/>
-  <text x="${size/2}" y="${size/2 + size*0.1}" font-family="Arial, sans-serif" font-size="${size*0.3}" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">UOMe</text>
+  <text x="${size/2}" y="${size/2 + size*0.1}" font-family="Arial, sans-serif" font-size="${size*0.3}" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">UOMi</text>
 </svg>`;
 }
 

@@ -21,8 +21,8 @@ def create_icon(size, filename):
             except:
                 font = ImageFont.load_default()
     
-    # Draw "UOMe" text in white, centered
-    text = "UOMe"
+    # Draw "UOMi" text in white, centered
+    text = "UOMi"
     bbox = draw.textbbox((0, 0), text, font=font)
     text_width = bbox[2] - bbox[0]
     text_height = bbox[3] - bbox[1]
@@ -38,7 +38,7 @@ def create_icon(size, filename):
     print(f"Created {filepath}")
 
 # Create the icons
-print("Generating PWA icons with 'UOMe' text...")
+print("Generating PWA icons with 'UOMi' text...")
 create_icon(192, 'pwa-192x192.png')
 create_icon(512, 'pwa-512x512.png')
 create_icon(180, 'apple-touch-icon.png')

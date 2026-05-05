@@ -14,8 +14,8 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
         manifest: {
-          name: 'UOMe Tracker',
-          short_name: 'UOMe',
+          name: 'UOMi Tracker',
+          short_name: 'UOMi',
           description: 'Track debts, sales, leave, and company information',
           theme_color: '#1976d2',
           background_color: '#ffffff',

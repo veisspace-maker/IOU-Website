@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { isAuthenticated } from '../middleware/auth';
 import pool from '../config/database';
 import { LeaveRecord, PublicHoliday, ClosedDate } from '../types/models';
-import { calculateBusinessDays, checkLeaveOverlap } from '../business-logic/calculations';
+import { calculateBusinessDays, checkLeaveOverlap, calculateLeaveOwed } from '../business-logic/calculations';
 
 const router = Router();
 
@@ -456,6 +456,52 @@ router.post('/check-overlap', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error checking leave overlap:', error);
     return res.status(500).json({ error: 'Failed to check leave overlap' });
+  }
+});
+
+// GET /api/leave/owed - Calculate leave owed between users
+router.get('/owed', async (req: Request, res: Response) => {
+  try {
+    // Fetch all leave records
+    const leaveResult = await pool.query(
+      `SELECT 
+        id, 
+        user_id, 
+        start_date, 
+        end_date, 
+        business_days, 
+        created_at, 
+        updated_at 
+      FROM leave_records`
+    );
+
+    const leaveRecords: LeaveRecord[] = leaveResult.rows.map((row: any) => ({
+      id: row.id,
+      userId: row.user_id,
+      startDate: new Date(row.start_date),
+      endDate: new Date(row.end_date),
+      businessDays: row.business_days,
+      createdAt: new Date(row.created_at),
+      updatedAt: new Date(row.updated_at),
+    }));
+
+    // Fetch all users
+    const usersResult = await pool.query(
+      'SELECT id, username FROM users ORDER BY username'
+    );
+
+    const users = usersResult.rows.map((row: any) => ({
+      id: row.id,
+      username: row.username,
+    }));
+
+    // Calculate leave owed
+    const leaveOwed = calculateLeaveOwed(leaveRecords, users);
+
+    return res.json(leaveOwed);
+  } catch (error) {
+    console.error('Error calculating leave owed:', error);
+    return res.status(500).json({ error: 'Failed to calculate leave owed' });
   }
 });
 

@@ -10,11 +10,12 @@ const router = Router();
 // All user routes require authentication
 router.use(isAuthenticated);
 
-// GET /api/users - List all users
+// GET /api/users - List all users (excluding "2 Masters" which is only for debt tracking)
 router.get('/', async (req: Request, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT id, username, two_factor_enabled, created_at, updated_at FROM users ORDER BY username'
+      'SELECT id, username, two_factor_enabled, created_at, updated_at FROM users WHERE username != $1 ORDER BY username',
+      ['2 Masters']
     );
 
     const users = result.rows.map((row: any) => ({

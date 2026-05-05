@@ -17,6 +17,7 @@ The Leave Tracker manages employee leave records with automatic business day cal
 - Overlap detection and warnings
 - Past date warnings
 - Pagination support (50 records per page)
+- **Leave owed tracking**: Automatically calculates and displays leave owed between users
 
 ### Business Day Calculation
 - Excludes weekends (Saturday and Sunday)
@@ -25,12 +26,20 @@ The Leave Tracker manages employee leave records with automatic business day cal
 - Automatic recalculation when holidays/closed dates change
 - Handles multi-day closure periods
 
+### Leave Owed Calculation
+- Tracks leave balance between users
+- When one user takes leave, the other user owes them that amount
+- Calculates net leave owed (similar to debt tracker logic)
+- Displays who owes whom and how many business days
+- Updates automatically when leave is added, edited, or deleted
+
 ### Smart Features
 - Visual calendar for date selection
 - Overlap warnings before submission
 - Zero business days validation
 - Automatic recalculation of existing records
 - User-specific leave tracking
+- Leave owed summary on home page
 
 ## User Interface
 
@@ -39,6 +48,7 @@ The Leave Tracker manages employee leave records with automatic business day cal
 2. **Leave History**: View all leave records
 3. **Leave Calendar**: Visual date selection
 4. **Summary Cards**: Quick statistics on home page
+5. **Leave Owed Display**: Shows who owes whom leave days
 
 ### Leave Entry Form
 - Start date picker
@@ -54,6 +64,13 @@ The Leave Tracker manages employee leave records with automatic business day cal
 - Edit and delete buttons
 - Sorted by creation date (newest first)
 - Pagination controls
+
+### Leave Owed Display
+- Shows on home page in Leave Summary section
+- Displays who owes whom and how many business days
+- Updates automatically when leave changes
+- Only shows when there is a non-zero balance
+- Example: "Leva is owed 3 business days by Danik"
 
 ### Leave Calendar
 - Month view with navigation
@@ -125,6 +142,24 @@ List leave records with pagination.
   "offset": 0
 }
 ```
+
+### GET /api/leave/owed
+Calculate leave owed between users.
+
+**Response:**
+```json
+{
+  "debtor": "user-uuid-1",
+  "creditor": "user-uuid-2",
+  "amount": 3
+}
+```
+
+**Logic:**
+- When a user takes leave, they gain that many days (others owe them)
+- For a 2-person system, calculates net leave owed
+- If User A took 5 days and User B took 2 days, User B owes User A 3 days
+- Returns `null` for debtor/creditor and `0` for amount if balanced or not a 2-person system
 
 ### POST /api/leave
 Create a new leave record.
@@ -266,6 +301,56 @@ function calculateBusinessDays(
   
   return businessDays;
 }
+```
+
+### Leave Owed Calculation Algorithm
+
+```typescript
+function calculateLeaveOwed(
+  leaveRecords: LeaveRecord[],
+  users: User[]
+): LeaveOwedResult {
+  // Track leave balance per user
+  const leaveBalance = new Map<string, number>();
+  
+  // Initialize all users with 0 balance
+  users.forEach(user => {
+    leaveBalance.set(user.id, 0);
+  });
+  
+  // When a user takes leave, they gain that many days
+  leaveRecords.forEach(leave => {
+    const currentBalance = leaveBalance.get(leave.userId) || 0;
+    leaveBalance.set(leave.userId, currentBalance + leave.businessDays);
+  });
+  
+  // For a 2-person system, calculate net leave owed
+  if (users.length === 2) {
+    const [user1, user2] = users;
+    const balance1 = leaveBalance.get(user1.id) || 0;
+    const balance2 = leaveBalance.get(user2.id) || 0;
+    
+    const netDifference = balance1 - balance2;
+    
+    if (netDifference > 0) {
+      // User1 took more leave, so User2 owes User1
+      return { debtor: user2.id, creditor: user1.id, amount: netDifference };
+    } else if (netDifference < 0) {
+      // User2 took more leave, so User1 owes User2
+      return { debtor: user1.id, creditor: user2.id, amount: Math.abs(netDifference) };
+    }
+  }
+  
+  // No debt or not a 2-person system
+  return { debtor: null, creditor: null, amount: 0 };
+}
+```
+
+**Example:**
+```
+Danik takes 5 days leave
+Leva takes 2 days leave
+Result: Leva owes Danik 3 days
 ```
 
 ### Overlap Detection

@@ -1,4 +1,4 @@
-// Data model interfaces for UOMe
+// Data model interfaces for UOMi
 
 /** Subset attached to req.user — never includes password or TOTP secret */
 export interface SessionUser {

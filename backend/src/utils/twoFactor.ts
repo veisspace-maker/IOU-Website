@@ -10,8 +10,8 @@ export interface TwoFactorSecret {
  */
 export function generateTwoFactorSecret(username: string): TwoFactorSecret {
   const secret = speakeasy.generateSecret({
-    name: `UOMe (${username})`,
-    issuer: 'UOMe',
+    name: `UOMi (${username})`,
+    issuer: 'UOMi',
     length: 32,
   });
 

@@ -1,4 +1,4 @@
--- UOMe Database Schema
+-- UOMi Database Schema
 -- Set timezone for this session (should match DB_TIMEZONE environment variable)
 SET timezone = 'Australia/Melbourne';
 
@@ -62,7 +62,7 @@ CREATE TABLE leave_records (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
-  business_days INTEGER NOT NULL CHECK (business_days > 0),
+  business_days INTEGER NOT NULL CHECK (business_days >= 0),
   created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT valid_date_range CHECK (start_date <= end_date)

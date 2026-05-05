@@ -1,4 +1,4 @@
-# UOMe Application
+# UOMi Application
 
 A comprehensive business management system for tracking sales, debts, employee leave, and company operations.
 
@@ -22,7 +22,7 @@ A comprehensive business management system for tracking sales, debts, employee l
 ## Project Structure
 
 ```
-uome-application/
+uomi-application/
 ├── backend/                    # Node.js/Express API
 │   ├── src/
 │   │   ├── business-logic/     # Business calculations
