@@ -40,6 +40,7 @@ interface LeaveRecord {
   startDate: string;
   endDate: string;
   businessDays: number;
+  description?: string | null;
 }
 
 interface User {
@@ -609,6 +610,7 @@ const LeaveCalendar: React.FC<LeaveCalendarProps> = ({
                   <Chip
                     key={leave.id}
                     label={user?.username || 'Unknown'}
+                    title={leave.description || undefined}
                     size="small"
                     sx={{
                       fontSize: { xs: '0.625rem', sm: '0.65rem' },

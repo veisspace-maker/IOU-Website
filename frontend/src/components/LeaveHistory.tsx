@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogActions,
   Alert,
+  TextField,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -28,6 +29,7 @@ interface LeaveRecord {
   startDate: string;
   endDate: string;
   businessDays: number;
+  description?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -73,6 +75,7 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [editDescription, setEditDescription] = useState('');
   const [businessDays, setBusinessDays] = useState<number | null>(null);
   const [calculating, setCalculating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -279,6 +282,7 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
       setExpandedId(leave.id);
       setStartDate(new Date(leave.startDate));
       setEndDate(new Date(leave.endDate));
+      setEditDescription(leave.description ?? '');
       setBusinessDays(leave.businessDays);
       setIsEditing(false);
       setFormError(null);
@@ -286,6 +290,10 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
   };
 
   const handleEdit = () => {
+    const leave = leaveRecords.find((l) => l.id === expandedId);
+    if (leave) {
+      setEditDescription(leave.description ?? '');
+    }
     setIsEditing(true);
   };
 
@@ -294,6 +302,7 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
     if (leave) {
       setStartDate(new Date(leave.startDate));
       setEndDate(new Date(leave.endDate));
+      setEditDescription(leave.description ?? '');
       setBusinessDays(leave.businessDays);
     }
     setIsEditing(false);
@@ -333,6 +342,7 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
           userId: leave.userId,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
+          description: editDescription.trim() ? editDescription.trim() : null,
         },
         { withCredentials: true }
       );
@@ -484,6 +494,22 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
                     {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                   </Box>
 
+                  {leave.description &&
+                  !(isExpanded && isEditing && expandedId === leave.id) ? (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mt: 0.75,
+                        pr: { xs: 0, sm: 1 },
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                      }}
+                    >
+                      {leave.description}
+                    </Typography>
+                  ) : null}
+
                   {/* Expanded Edit Form */}
                   <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                     <Box 
@@ -570,6 +596,16 @@ const LeaveHistory: React.FC<LeaveHistoryProps> = ({
                                 {businessDays === 1 ? 'Day Off' : `${businessDays} business days`}
                               </Typography>
                             ) : null}
+
+                            <TextField
+                              label="Description"
+                              value={editDescription}
+                              onChange={(e) => setEditDescription(e.target.value)}
+                              fullWidth
+                              multiline
+                              minRows={2}
+                              placeholder="Optional"
+                            />
                           </Box>
                         </LocalizationProvider>
                       )}

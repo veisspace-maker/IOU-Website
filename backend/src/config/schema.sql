@@ -63,6 +63,7 @@ CREATE TABLE leave_records (
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
   business_days INTEGER NOT NULL CHECK (business_days >= 0),
+  description TEXT,
   created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT valid_date_range CHECK (start_date <= end_date)

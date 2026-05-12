@@ -6,6 +6,7 @@ interface LeaveRecord {
   startDate: string;
   endDate: string;
   businessDays: number;
+  description?: string | null;
   createdAt: string;
   updatedAt: string;
 }

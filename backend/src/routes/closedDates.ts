@@ -299,6 +299,7 @@ router.post('/check-leave-conflict', async (req: Request, res: Response) => {
         start_date, 
         end_date, 
         business_days, 
+        description,
         created_at, 
         updated_at 
       FROM leave_records`
@@ -310,6 +311,7 @@ router.post('/check-leave-conflict', async (req: Request, res: Response) => {
       startDate: new Date(row.start_date),
       endDate: new Date(row.end_date),
       businessDays: row.business_days,
+      description: row.description ?? null,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     }));

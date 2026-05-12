@@ -12,6 +12,7 @@ import {
   Alert,
   CircularProgress,
   Fade,
+  TextField,
 } from '@mui/material';
 import { TransitionProps } from '@mui/material/transitions';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -46,6 +47,7 @@ interface LeaveRecord {
   startDate: string;
   endDate: string;
   businessDays: number;
+  description?: string | null;
 }
 
 interface LeaveEntryFormProps {
@@ -65,6 +67,7 @@ const LeaveEntryForm: React.FC<LeaveEntryFormProps> = ({
 }) => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [description, setDescription] = useState('');
   const [businessDays, setBusinessDays] = useState<number | null>(null);
   const [calculating, setCalculating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -244,6 +247,7 @@ const LeaveEntryForm: React.FC<LeaveEntryFormProps> = ({
           userId: selectedPersonId,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
+          description: description.trim() ? description.trim() : null,
         },
         { withCredentials: true }
       );
@@ -251,6 +255,7 @@ const LeaveEntryForm: React.FC<LeaveEntryFormProps> = ({
       // Reset form
       setStartDate(null);
       setEndDate(null);
+      setDescription('');
       setBusinessDays(null);
       setError(null);
 
@@ -306,6 +311,7 @@ const LeaveEntryForm: React.FC<LeaveEntryFormProps> = ({
           userId: selectedPersonId,
           startDate: mergedStartDate.toISOString(),
           endDate: mergedEndDate.toISOString(),
+          description: description.trim() ? description.trim() : null,
         },
         { withCredentials: true }
       );
@@ -313,6 +319,7 @@ const LeaveEntryForm: React.FC<LeaveEntryFormProps> = ({
       // Reset form
       setStartDate(null);
       setEndDate(null);
+      setDescription('');
       setBusinessDays(null);
       setError(null);
       setOverlappingLeave([]);
@@ -392,6 +399,17 @@ const LeaveEntryForm: React.FC<LeaveEntryFormProps> = ({
           </Typography>
         )}
 
+        <TextField
+          label="Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          fullWidth
+          multiline
+          minRows={2}
+          placeholder="Optional"
+          sx={{ mb: 2 }}
+        />
+
         <Button
           variant="contained"
           color="primary"
@@ -445,6 +463,7 @@ const LeaveEntryForm: React.FC<LeaveEntryFormProps> = ({
             {overlappingLeave.map((leave) => (
               <Typography key={leave.id} variant="body2" sx={{ mt: 1 }}>
                 • {format(new Date(leave.startDate), 'dd/MM/yyyy')} → {format(new Date(leave.endDate), 'dd/MM/yyyy')} ({leave.businessDays} business days)
+                {leave.description ? ` — ${leave.description}` : ''}
               </Typography>
             ))}
             <DialogContentText sx={{ mt: 2 }}>

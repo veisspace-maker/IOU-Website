@@ -6,6 +6,13 @@ import { calculateBusinessDays, checkLeaveOverlap, calculateLeaveOwed } from '..
 
 const router = Router();
 
+function normalizeLeaveDescription(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string') return null;
+  const t = value.trim();
+  return t.length === 0 ? null : t;
+}
+
 // All leave routes require authentication
 router.use(isAuthenticated);
 
@@ -52,6 +59,7 @@ router.get('/', async (req: Request, res: Response) => {
         start_date, 
         end_date, 
         business_days, 
+        description,
         created_at, 
         updated_at 
       FROM leave_records 
@@ -79,6 +87,7 @@ router.get('/', async (req: Request, res: Response) => {
         startDate: row.start_date,
         endDate: row.end_date,
         businessDays: recalculatedBusinessDays,
+        description: row.description ?? null,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
       };
@@ -99,7 +108,8 @@ router.get('/', async (req: Request, res: Response) => {
 // POST /api/leave - Create leave record
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { userId, startDate, endDate } = req.body;
+    const { userId, startDate, endDate, description } = req.body;
+    const descriptionValue = normalizeLeaveDescription(description);
 
     // Validate required fields
     if (!userId || !startDate || !endDate) {
@@ -167,10 +177,10 @@ router.post('/', async (req: Request, res: Response) => {
 
     // Insert leave record
     const result = await pool.query(
-      `INSERT INTO leave_records (user_id, start_date, end_date, business_days)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, user_id, start_date, end_date, business_days, created_at, updated_at`,
-      [userId, start, end, businessDays]
+      `INSERT INTO leave_records (user_id, start_date, end_date, business_days, description)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, user_id, start_date, end_date, business_days, description, created_at, updated_at`,
+      [userId, start, end, businessDays, descriptionValue]
     );
 
     const leaveRecord = {
@@ -179,6 +189,7 @@ router.post('/', async (req: Request, res: Response) => {
       startDate: result.rows[0].start_date,
       endDate: result.rows[0].end_date,
       businessDays: result.rows[0].business_days,
+      description: result.rows[0].description ?? null,
       createdAt: result.rows[0].created_at,
       updatedAt: result.rows[0].updated_at,
     };
@@ -197,7 +208,7 @@ router.post('/', async (req: Request, res: Response) => {
 router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { userId, startDate, endDate } = req.body;
+    const { userId, startDate, endDate, description } = req.body;
 
     // Check if leave record exists
     const existingResult = await pool.query(
@@ -273,14 +284,27 @@ router.put('/:id', async (req: Request, res: Response) => {
       });
     }
 
+    const descriptionProvided = Object.prototype.hasOwnProperty.call(req.body, 'description');
+    const descriptionValue = descriptionProvided
+      ? normalizeLeaveDescription(description)
+      : undefined;
+
     // Update leave record
-    const result = await pool.query(
-      `UPDATE leave_records 
-       SET user_id = $1, start_date = $2, end_date = $3, business_days = $4
-       WHERE id = $5
-       RETURNING id, user_id, start_date, end_date, business_days, created_at, updated_at`,
-      [userId, start, end, businessDays, id]
-    );
+    const result = descriptionProvided
+      ? await pool.query(
+          `UPDATE leave_records 
+           SET user_id = $1, start_date = $2, end_date = $3, business_days = $4, description = $5
+           WHERE id = $6
+           RETURNING id, user_id, start_date, end_date, business_days, description, created_at, updated_at`,
+          [userId, start, end, businessDays, descriptionValue ?? null, id]
+        )
+      : await pool.query(
+          `UPDATE leave_records 
+           SET user_id = $1, start_date = $2, end_date = $3, business_days = $4
+           WHERE id = $5
+           RETURNING id, user_id, start_date, end_date, business_days, description, created_at, updated_at`,
+          [userId, start, end, businessDays, id]
+        );
 
     const leaveRecord = {
       id: result.rows[0].id,
@@ -288,6 +312,7 @@ router.put('/:id', async (req: Request, res: Response) => {
       startDate: result.rows[0].start_date,
       endDate: result.rows[0].end_date,
       businessDays: result.rows[0].business_days,
+      description: result.rows[0].description ?? null,
       createdAt: result.rows[0].created_at,
       updatedAt: result.rows[0].updated_at,
     };
@@ -421,6 +446,7 @@ router.post('/check-overlap', async (req: Request, res: Response) => {
         start_date, 
         end_date, 
         business_days, 
+        description,
         created_at, 
         updated_at 
       FROM leave_records 
@@ -434,6 +460,7 @@ router.post('/check-overlap', async (req: Request, res: Response) => {
       startDate: new Date(row.start_date),
       endDate: new Date(row.end_date),
       businessDays: row.business_days,
+      description: row.description ?? null,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     }));
@@ -470,6 +497,7 @@ router.get('/owed', async (req: Request, res: Response) => {
         start_date, 
         end_date, 
         business_days, 
+        description,
         created_at, 
         updated_at 
       FROM leave_records`
@@ -481,6 +509,7 @@ router.get('/owed', async (req: Request, res: Response) => {
       startDate: new Date(row.start_date),
       endDate: new Date(row.end_date),
       businessDays: row.business_days,
+      description: row.description ?? null,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     }));

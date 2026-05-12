@@ -10,6 +10,7 @@ interface LeaveRecord {
   startDate: string;
   endDate: string;
   businessDays: number;
+  description?: string | null;
 }
 
 interface User {

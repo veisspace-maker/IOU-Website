@@ -76,6 +76,7 @@ export interface LeaveRecord {
   startDate: Date;
   endDate: Date;
   businessDays: number;  // Calculated field
+  description?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

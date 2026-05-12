@@ -25,6 +25,10 @@ async function ensureRuntimeSchema() {
       );
     }
 
+    await pool.query(
+      'ALTER TABLE leave_records ADD COLUMN IF NOT EXISTS description TEXT'
+    );
+
     // Debt tracker v2 relies on this table.
     await pool.query(`
       CREATE TABLE IF NOT EXISTS debt_transactions_v2 (
