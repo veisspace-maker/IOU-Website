@@ -2,12 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Card, CardContent, Typography, CircularProgress } from '@mui/material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
-interface DebtResult {
-  debtor: string;
-  creditor: string;
-  amount: number;
-}
+import { formatEntityName, type Entity, type DebtResult } from '../utils/debtTrackerUtils';
 
 interface DebtSummaryCardProps {
   refreshKey?: number;
@@ -107,11 +102,11 @@ const DebtSummaryCard: React.FC<DebtSummaryCardProps> = ({ refreshKey = 0 }) => 
       <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
         <Typography variant="body1" component="div" sx={{ fontSize: { xs: '0.938rem', sm: '1rem' } }}>
           <Box component="span" sx={{ fontWeight: 'bold' }}>
-            {debtData.debtor}
+            {formatEntityName(debtData.debtor as Entity)}
           </Box>
           {' owes '}
           <Box component="span" sx={{ fontWeight: 'bold' }}>
-            {debtData.creditor}
+            {formatEntityName(debtData.creditor as Entity)}
           </Box>
         </Typography>
         <Typography variant="h5" sx={{ mt: 1, fontWeight: 'bold', fontSize: { xs: '1.5rem', sm: '1.75rem' } }}>

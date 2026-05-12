@@ -150,7 +150,7 @@ const LeaveSummaryCards: React.FC = () => {
               Leave Owed
             </Typography>
             <Typography variant="body2">
-              {getUserName(leaveOwed.creditor)} is owed {leaveOwed.amount} business day{leaveOwed.amount !== 1 ? 's' : ''} by {getUserName(leaveOwed.debtor)}
+              {getUserName(leaveOwed.debtor)} has {leaveOwed.amount} day{leaveOwed.amount !== 1 ? 's' : ''} off
             </Typography>
           </Alert>
         </Box>
