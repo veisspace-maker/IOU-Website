@@ -207,10 +207,6 @@ const MonthlyRecurrencePanel: React.FC = () => {
       <Typography variant="h6" gutterBottom>
         Monthly recurring charges
       </Typography>
-      {/* <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        The server creates one debt transaction per calendar month per template (after the scheduled day has passed).
-        Missed months are backfilled when the daily job runs at 00:05 local time.
-      </Typography> */}
 
       {loadError && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -315,7 +311,14 @@ const MonthlyRecurrencePanel: React.FC = () => {
               templates.map((t) => (
                 <TableRow key={t.id}>
                   <TableCell>
-                    {formatEntityName(t.from)} → {formatEntityName(t.to)}
+                    <Box>
+                      <Typography variant="body2">
+                        {formatEntityName(t.from)} → {formatEntityName(t.to)}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {t.description?.trim() ? t.description.trim() : '—'}
+                      </Typography>
+                    </Box>
                   </TableCell>
                   <TableCell align="right">{formatCurrency(t.amount)}</TableCell>
                   <TableCell>{t.dayOfMonth}</TableCell>
