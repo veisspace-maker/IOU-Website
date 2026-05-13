@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction, Entity } from '../types/debtTracker';
 
@@ -20,10 +20,13 @@ export class TransactionRepository {
    * @param transaction - Transaction data without ID
    * @returns Created transaction with generated ID
    */
-  async create(transaction: Omit<Transaction, 'id'>): Promise<Transaction> {
+  async create(
+    transaction: Omit<Transaction, 'id'>,
+    executor: Pool | PoolClient = this.pool
+  ): Promise<Transaction> {
     const id = uuidv4();
     
-    const result = await this.pool.query(
+    const result = await executor.query(
       `INSERT INTO debt_transactions_v2 (id, from_entity, to_entity, amount, timestamp, description)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, from_entity, to_entity, amount, timestamp, description`,

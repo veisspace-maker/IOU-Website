@@ -14,6 +14,8 @@ import birthdaysRoutes from './routes/birthdays';
 import salesTransactionsRoutes from './routes/salesTransactions';
 import salesItemsRoutes from './routes/salesItems';
 import debtTransactionsV2Routes from './routes/debtTransactionsV2';
+import debtRecurrenceTemplatesRoutes from './routes/debtRecurrenceTemplates';
+import { startDebtRecurrenceScheduler } from './jobs/debtRecurrenceJob';
 
 dotenv.config();
 
@@ -125,12 +127,16 @@ app.use('/api/sales-items', salesItemsRoutes);
 // Debt transaction v2 routes
 app.use('/api/debt-transactions-v2', debtTransactionsV2Routes);
 
+// Global monthly debt recurrence templates
+app.use('/api/debt-recurrence-templates', debtRecurrenceTemplatesRoutes);
+
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Access locally: http://localhost:${PORT}`);
   console.log(`Access on network: http://[YOUR_IP]:${PORT}`);
+  startDebtRecurrenceScheduler();
 });
 
 export default app;

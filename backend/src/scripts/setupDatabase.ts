@@ -31,13 +31,21 @@ export async function setupDatabase(): Promise<void> {
   ];
 
   for (const user of users) {
-    await pool.query(
+    const result = await pool.query(
       `INSERT INTO users (username, password_hash, pin_hash, two_factor_enabled)
        VALUES ($1, $2, $3, $4)
-       ON CONFLICT (username) DO NOTHING`,
+       ON CONFLICT (username) DO UPDATE
+         SET password_hash = EXCLUDED.password_hash,
+             pin_hash = NULL,
+             two_factor_secret = NULL,
+             two_factor_enabled = EXCLUDED.two_factor_enabled`,
       [user.username, user.passwordHash, null, false]
     );
-    console.log(`✅ Created user: ${user.username}`);
+    if ((result.rowCount || 0) > 0) {
+      console.log(`✅ Upserted user: ${user.username}`);
+    } else {
+      console.log(`ℹ️  User unchanged: ${user.username}`);
+    }
   }
 
   console.log('\n✅ Database setup complete!');

@@ -51,6 +51,50 @@ async function ensureRuntimeSchema() {
       ON debt_transactions_v2(timestamp DESC)
     `);
 
+    // Monthly debt recurrence tables (global templates + idempotent occurrences).
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS debt_recurrence_templates (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        from_entity TEXT NOT NULL CHECK (
+          from_entity IN ('lev', 'danik', '2masters')
+        ),
+        to_entity TEXT NOT NULL CHECK (
+          to_entity IN ('lev', 'danik', '2masters')
+        ),
+        amount DECIMAL(10, 2) NOT NULL CHECK (amount > 0),
+        description TEXT,
+        day_of_month INTEGER NOT NULL CHECK (day_of_month >= 1 AND day_of_month <= 31),
+        start_date DATE NOT NULL,
+        end_date DATE,
+        active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT debt_recurrence_different_entities CHECK (from_entity != to_entity),
+        CONSTRAINT debt_recurrence_end_after_start CHECK (end_date IS NULL OR end_date >= start_date)
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS debt_recurrence_occurrences (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        template_id UUID NOT NULL REFERENCES debt_recurrence_templates(id) ON DELETE CASCADE,
+        calendar_year INTEGER NOT NULL,
+        calendar_month INTEGER NOT NULL CHECK (calendar_month >= 1 AND calendar_month <= 12),
+        transaction_id UUID NOT NULL REFERENCES debt_transactions_v2(id) ON DELETE RESTRICT,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (template_id, calendar_year, calendar_month)
+      )
+    `);
+
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_debt_recurrence_templates_active
+      ON debt_recurrence_templates(active) WHERE active = TRUE
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_debt_recurrence_occurrences_template
+      ON debt_recurrence_occurrences(template_id)
+    `);
+
     console.log('Runtime schema is up to date');
     process.exit(0);
   } catch (error) {
