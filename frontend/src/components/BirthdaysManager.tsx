@@ -218,6 +218,7 @@ const BirthdaysManager: React.FC = () => {
 
         <DatePicker
           label="Date of Birth"
+          format="dd/MM/yy"
           value={dateOfBirth}
           onChange={(newValue) => setDateOfBirth(newValue)}
           slotProps={{
@@ -287,7 +288,7 @@ const BirthdaysManager: React.FC = () => {
                       {birthday.name}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {format(parseISO(birthday.dateOfBirth), 'dd/MM/yyyy')} (Age: {age})
+                      {format(parseISO(birthday.dateOfBirth), 'dd/MM/yy')} (Age: {age})
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', gap: 1 }}>
