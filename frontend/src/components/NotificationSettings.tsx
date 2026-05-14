@@ -289,6 +289,10 @@ const NotificationSettings: React.FC = () => {
           • Each notification is sent only once per day
           <br />
           • Make sure your browser allows notifications for this site
+          <br />
+          • On Android Chrome, add this site to your Home screen (installed PWA) so notifications are shown through the service worker reliably
+          <br />
+          • Birthday checks run in your browser (about every hour while the site can run); they are not server push alerts when the browser is completely closed
         </Typography>
       </Box>
     </Paper>

@@ -114,6 +114,54 @@ class NotificationService {
     this.saveNotifiedBirthdays();
   }
 
+  /**
+   * Android Chrome (and some other mobile browsers) reliably shows system notifications
+   * when they are created from the active service worker. Plain `new Notification()` in the
+   * page works on desktop but is often suppressed on mobile without this path.
+   */
+  private async displayNotification(
+    title: string,
+    options: NotificationOptions,
+    daysUntil: BirthdayNotification['daysUntil']
+  ): Promise<boolean> {
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('service-worker-ready-timeout')), 4000)
+          ),
+        ]);
+        await registration.showNotification(title, options);
+        if (daysUntil !== 0 && options.tag) {
+          const closeTag = options.tag;
+          setTimeout(async () => {
+            try {
+              const open = await registration.getNotifications({ tag: closeTag });
+              open.forEach((n) => n.close());
+            } catch {
+              /* ignore */
+            }
+          }, 10000);
+        }
+        return true;
+      } catch {
+        /* fall back to window Notification */
+      }
+    }
+
+    try {
+      const notification = new Notification(title, options);
+      if (daysUntil !== 0) {
+        setTimeout(() => notification.close(), 10000);
+      }
+      return true;
+    } catch (error) {
+      console.error('Error showing notification (window fallback):', error);
+      return false;
+    }
+  }
+
   // Send a birthday notification. Returns false if blocked, skipped as duplicate, or creation failed.
   async sendBirthdayNotification(
     birthday: BirthdayNotification,
@@ -148,23 +196,24 @@ class NotificationService {
         return false;
       }
 
-      const notification = new Notification(title, {
+      const options: NotificationOptions = {
         body,
         icon: '/favicon.ico',
         badge: '/favicon.ico',
         tag: this.getNotificationKey(birthday),
         requireInteraction: birthday.daysUntil === 0, // Keep today's notifications visible
-      });
+      };
+
+      const shown = await this.displayNotification(title, options, birthday.daysUntil);
+      if (!shown) {
+        return false;
+      }
 
       // Mark as notified (unless it's a test notification)
       if (!skipDuplicateCheck) {
         this.markAsNotified(birthday);
       }
 
-      // Auto-close after 10 seconds (except for today's birthdays)
-      if (birthday.daysUntil !== 0) {
-        setTimeout(() => notification.close(), 10000);
-      }
       return true;
     } catch (error) {
       console.error('Error sending notification:', error);
