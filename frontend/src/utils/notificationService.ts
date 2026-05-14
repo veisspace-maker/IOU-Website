@@ -14,7 +14,7 @@ class NotificationService {
 
   constructor() {
     this.loadNotifiedBirthdays();
-    this.checkPermission();
+    this.refreshPermissionFromBrowser();
   }
 
   // Load previously notified birthdays from localStorage
@@ -50,8 +50,8 @@ class NotificationService {
     }
   }
 
-  // Check current notification permission
-  private checkPermission(): void {
+  /** Always read from the browser — cached `this.permission` can go stale vs `Notification.permission`. */
+  private refreshPermissionFromBrowser(): void {
     if ('Notification' in window) {
       this.permission = Notification.permission;
     }
@@ -64,6 +64,7 @@ class NotificationService {
       return false;
     }
 
+    this.refreshPermissionFromBrowser();
     console.log('Current permission before request:', Notification.permission);
 
     if (this.permission === 'granted') {
@@ -90,7 +91,11 @@ class NotificationService {
 
   // Check if notifications are supported and permitted
   isSupported(): boolean {
-    return 'Notification' in window && this.permission === 'granted';
+    if (!('Notification' in window)) {
+      return false;
+    }
+    this.refreshPermissionFromBrowser();
+    return this.permission === 'granted';
   }
 
   // Generate notification key for tracking
@@ -109,16 +114,19 @@ class NotificationService {
     this.saveNotifiedBirthdays();
   }
 
-  // Send a birthday notification
-  async sendBirthdayNotification(birthday: BirthdayNotification, skipDuplicateCheck = false): Promise<void> {
+  // Send a birthday notification. Returns false if blocked, skipped as duplicate, or creation failed.
+  async sendBirthdayNotification(
+    birthday: BirthdayNotification,
+    skipDuplicateCheck = false
+  ): Promise<boolean> {
     if (!this.isSupported()) {
       console.warn('Notifications not supported or not permitted');
-      return;
+      return false;
     }
 
     // Don't send duplicate notifications (unless explicitly skipped for testing)
     if (!skipDuplicateCheck && this.wasNotified(birthday)) {
-      return;
+      return true;
     }
 
     try {
@@ -137,7 +145,7 @@ class NotificationService {
           ? 'Notifications are now enabled! You\'ll receive birthday reminders here.'
           : `${birthday.name}'s birthday is in 7 days – turning ${birthday.turningAge}`;
       } else {
-        return;
+        return false;
       }
 
       const notification = new Notification(title, {
@@ -157,8 +165,10 @@ class NotificationService {
       if (birthday.daysUntil !== 0) {
         setTimeout(() => notification.close(), 10000);
       }
+      return true;
     } catch (error) {
       console.error('Error sending notification:', error);
+      return false;
     }
   }
 

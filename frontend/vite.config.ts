@@ -90,7 +90,7 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       host: '0.0.0.0',
-      port: 5176,
+      port: 8001,
       proxy: {
         '/api': {
           target: apiProxyTarget,

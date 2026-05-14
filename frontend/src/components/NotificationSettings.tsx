@@ -19,22 +19,31 @@ const NotificationSettings: React.FC = () => {
   const [testMessage, setTestMessage] = useState<string | null>(null);
   const [permissionState, setPermissionState] = useState<NotificationPermission>('default');
 
+  const syncPermissionFromBrowser = () => {
+    if (!('Notification' in window)) {
+      setNotificationsSupported(false);
+      return;
+    }
+    const currentPermission = Notification.permission;
+    setPermissionState(currentPermission);
+    setNotificationsEnabled(currentPermission === 'granted');
+  };
+
   useEffect(() => {
-    // Check if notifications are supported
     if (!('Notification' in window)) {
       setNotificationsSupported(false);
       return;
     }
 
-    // Log current state for debugging
     console.log('Notification API available:', 'Notification' in window);
     console.log('Current permission:', Notification.permission);
     console.log('Is secure context (HTTPS):', window.isSecureContext);
 
-    // Check current permission status
-    const currentPermission = Notification.permission;
-    setPermissionState(currentPermission);
-    setNotificationsEnabled(currentPermission === 'granted');
+    syncPermissionFromBrowser();
+
+    const onFocus = () => syncPermissionFromBrowser();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, []);
 
   const handleEnableNotifications = async () => {
@@ -95,14 +104,24 @@ const NotificationSettings: React.FC = () => {
     }
 
     try {
-      // Send a test notification
-      await notificationService.sendBirthdayNotification({
-        id: 'test',
-        name: 'Test Person',
-        turningAge: 25,
-        daysUntil: 7,
-      });
-      setTestMessage('Test notification sent! Check your notifications.');
+      const ok = await notificationService.sendBirthdayNotification(
+        {
+          id: 'test-' + Date.now(),
+          name: 'Test Person',
+          turningAge: 25,
+          daysUntil: 7,
+        },
+        true
+      );
+      if (ok) {
+        setTestMessage(
+          'Test notification sent. If you do not see it, check Focus Assist / Do Not Disturb (Windows), Notification Center, and that this site is allowed in browser notification settings.'
+        );
+      } else {
+        setTestMessage(
+          'Could not show a notification. Permission may have been revoked — try refocusing this tab or re-enabling notifications in your browser site settings, then refresh the page.'
+        );
+      }
     } catch (error) {
       setTestMessage('Failed to send test notification.');
     }
@@ -230,7 +249,7 @@ const NotificationSettings: React.FC = () => {
         
         {notificationsEnabled && (
           <Alert severity="success" sx={{ mb: 2 }}>
-            ✓ Notifications are enabled and working!
+            ✓ Browser permission is granted for this site. Use &quot;Send Test Notification&quot; to confirm they appear on your device.
           </Alert>
         )}
       </Box>
