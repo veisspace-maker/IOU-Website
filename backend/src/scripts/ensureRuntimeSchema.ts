@@ -95,6 +95,84 @@ async function ensureRuntimeSchema() {
       ON debt_recurrence_occurrences(template_id)
     `);
 
+    // Sales tracker (see addSalesTransactionsTable / addQuantity / addSeller migrations).
+    // Older volumes never ran those scripts; Docker only runs this file before the server.
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS sales_transactions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        item VARCHAR(255) NOT NULL,
+        price DECIMAL(10, 2) NOT NULL CHECK (price > 0),
+        date DATE NOT NULL,
+        description TEXT,
+        created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
+        seller VARCHAR(50) CHECK (seller IN ('leva', 'danik'))
+      )
+    `);
+
+    await pool.query(`
+      ALTER TABLE sales_transactions
+      ADD COLUMN IF NOT EXISTS quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0)
+    `);
+    await pool.query(`
+      ALTER TABLE sales_transactions
+      ADD COLUMN IF NOT EXISTS seller VARCHAR(50) CHECK (seller IN ('leva', 'danik'))
+    `);
+
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_sales_transactions_id ON sales_transactions(id)
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_sales_transactions_created_by ON sales_transactions(created_by)
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_sales_transactions_date ON sales_transactions(date)
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_sales_transactions_seller ON sales_transactions(seller)
+    `);
+
+    // Sales item presets for dropdowns (see addSalesItemsTable migration).
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS sales_items (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) UNIQUE NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_sales_items_name ON sales_items(name)
+    `);
+
+    await pool.query(`
+      CREATE OR REPLACE FUNCTION update_updated_at_column()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.updated_at = CURRENT_TIMESTAMP;
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql
+    `);
+    await pool.query(`
+      DROP TRIGGER IF EXISTS update_sales_transactions_updated_at ON sales_transactions
+    `);
+    await pool.query(`
+      CREATE TRIGGER update_sales_transactions_updated_at
+      BEFORE UPDATE ON sales_transactions
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+    `);
+    await pool.query(`
+      DROP TRIGGER IF EXISTS update_sales_items_updated_at ON sales_items
+    `);
+    await pool.query(`
+      CREATE TRIGGER update_sales_items_updated_at
+      BEFORE UPDATE ON sales_items
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+    `);
+
     console.log('Runtime schema is up to date');
     process.exit(0);
   } catch (error) {
