@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import session from 'express-session';
 import pool from './config/database';
+import { ensureRuntimeSchema } from './scripts/ensureRuntimeSchema';
 import passport from './middleware/auth';
 import authRoutes from './routes/auth';
 import usersRoutes from './routes/users';
@@ -130,13 +131,20 @@ app.use('/api/debt-transactions-v2', debtTransactionsV2Routes);
 // Global monthly debt recurrence templates
 app.use('/api/debt-recurrence-templates', debtRecurrenceTemplatesRoutes);
 
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Access locally: http://localhost:${PORT}`);
-  console.log(`Access on network: http://[YOUR_IP]:${PORT}`);
-  startDebtRecurrenceScheduler();
+async function start() {
+  await ensureRuntimeSchema();
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Access locally: http://localhost:${PORT}`);
+    console.log(`Access on network: http://[YOUR_IP]:${PORT}`);
+    startDebtRecurrenceScheduler();
+  });
+}
+
+void start().catch((err) => {
+  console.error('Server failed to start:', err);
+  process.exit(1);
 });
 
 export default app;

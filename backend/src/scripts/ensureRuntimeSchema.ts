@@ -1,7 +1,8 @@
 import pool from '../config/database';
 import { setupDatabase } from './setupDatabase';
 
-async function ensureRuntimeSchema() {
+/** Idempotent DDL for tables/columns added after older schema.sql volumes. Safe to run on every startup. */
+export async function ensureRuntimeSchema(): Promise<void> {
   try {
     console.log('Ensuring runtime schema...');
 
@@ -26,7 +27,7 @@ async function ensureRuntimeSchema() {
     }
 
     await pool.query(
-      'ALTER TABLE leave_records ADD COLUMN IF NOT EXISTS description TEXT'
+      'ALTER TABLE IF EXISTS leave_records ADD COLUMN IF NOT EXISTS description TEXT'
     );
 
     // Debt tracker v2 relies on this table.
@@ -174,11 +175,22 @@ async function ensureRuntimeSchema() {
     `);
 
     console.log('Runtime schema is up to date');
-    process.exit(0);
   } catch (error) {
     console.error('Failed to ensure runtime schema:', error);
+    throw error;
+  }
+}
+
+async function main() {
+  try {
+    await ensureRuntimeSchema();
+    process.exit(0);
+  } catch {
     process.exit(1);
   }
 }
 
-ensureRuntimeSchema();
+const ranAsCli = /ensureRuntimeSchema\.(ts|js)$/.test(process.argv[1] || '');
+if (ranAsCli) {
+  void main();
+}

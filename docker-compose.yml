@@ -28,6 +28,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_TIMEZONE: Australia/Melbourne
+      # Must differ from backend defaultSessionSecret in index.ts or server exits in production
       SESSION_SECRET: change-me-in-production
       # Set COOKIE_SECURE=true when serving the API behind HTTPS only
       COOKIE_SECURE: 'false'
@@ -36,6 +37,18 @@ services:
         condition: service_healthy
     ports:
       - "3001:3001"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
 
   frontend:
     build:
@@ -45,7 +58,8 @@ services:
     environment:
       VITE_COMPANY_TIMEZONE: Australia/Melbourne
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "4173:4173"
 

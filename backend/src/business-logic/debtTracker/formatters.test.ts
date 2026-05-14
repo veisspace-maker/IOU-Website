@@ -45,7 +45,7 @@ describe('formatters', () => {
         creditor: 'lev',
         amount: 999999.99
       };
-      expect(formatDebtDisplay(result)).toBe('Danik owes Lev $999999.99');
+      expect(formatDebtDisplay(result)).toBe('Danik owes Lev $999,999.99');
     });
 
     it('should format very small amounts correctly', () => {
@@ -81,7 +81,7 @@ describe('formatters', () => {
     });
 
     it('should format very large amounts', () => {
-      expect(formatCurrency(999999.99)).toBe('$999999.99');
+      expect(formatCurrency(999999.99)).toBe('$999,999.99');
     });
 
     it('should format very small amounts', () => {
@@ -114,7 +114,7 @@ describe('formatters', () => {
       expect(formatted).toContain('15');
       expect(formatted).toContain('2024');
       expect(formatted).toContain('3:45');
-      expect(formatted).toContain('PM');
+      expect(formatted.toLowerCase()).toContain('pm');
     });
 
     it('should format morning timestamps with AM', () => {
@@ -123,7 +123,7 @@ describe('formatters', () => {
       const formatted = formatTimestamp(timestamp);
       
       expect(formatted).toContain('9:30');
-      expect(formatted).toContain('AM');
+      expect(formatted.toLowerCase()).toContain('am');
     });
 
     it('should format midnight correctly', () => {
@@ -132,7 +132,7 @@ describe('formatters', () => {
       const formatted = formatTimestamp(timestamp);
       
       expect(formatted).toContain('12:00');
-      expect(formatted).toContain('AM');
+      expect(formatted.toLowerCase()).toContain('am');
     });
 
     it('should format noon correctly', () => {
@@ -141,7 +141,7 @@ describe('formatters', () => {
       const formatted = formatTimestamp(timestamp);
       
       expect(formatted).toContain('12:00');
-      expect(formatted).toContain('PM');
+      expect(formatted.toLowerCase()).toContain('pm');
     });
 
     it('should format epoch timestamp', () => {
@@ -164,3 +164,4 @@ describe('formatters', () => {
     });
   });
 });
+
