@@ -115,11 +115,11 @@ const NotificationSettings: React.FC = () => {
       );
       if (ok) {
         setTestMessage(
-          'Test notification sent. If you do not see it, check Focus Assist / Do Not Disturb (Windows), Notification Center, and that this site is allowed in browser notification settings.'
+          'Test notification sent. On Android (especially Pixel / Android 15+), the floating preview usually hides after a few seconds; open the notification shade (swipe down from the top) to see the full card until you dismiss it. On Windows, check Focus Assist / Do Not Disturb and the notification center.'
         );
       } else {
         setTestMessage(
-          'Could not show a notification. Permission may have been revoked — try refocusing this tab or re-enabling notifications in your browser site settings, then refresh the page.'
+          'Could not show a notification. On Android Chrome this usually needs a production build (service worker), HTTPS, and a valid notification icon. After opening the site, wait a few seconds for the worker to activate, then try again. If you use plain HTTP on a LAN IP, install or test from a secure URL instead.'
         );
       }
     } catch (error) {
@@ -289,6 +289,10 @@ const NotificationSettings: React.FC = () => {
           • Each notification is sent only once per day
           <br />
           • Make sure your browser allows notifications for this site
+          <br />
+          • On Android (Pixel / Android 15–16): the small floating “heads-up” preview is meant to disappear after a few seconds. That is normal. The alert should stay in the notification shade until you swipe it away; pull down from the top of the screen to open the shade. The web app cannot keep the floating bubble on screen the way desktop Chrome can.
+          <br />
+          • If tests seem to “vanish” completely, Android 16’s notification cooldown can quiet repeated pings from the same app; wait a minute between tests. Also check Settings → Apps → Chrome → Notifications and set Chrome’s birthday channel to Default or higher (not Silent).
           <br />
           • On Android Chrome, add this site to your Home screen (installed PWA) so notifications are shown through the service worker reliably
           <br />
