@@ -42,6 +42,8 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
+          // Handles notification taps (see public/notification-click.js)
+          importScripts: ['notification-click.js'],
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
           runtimeCaching: [
             {

@@ -1,5 +1,19 @@
 // Notification service for birthday reminders
 
+/** Must be a real image URL. A missing path (e.g. SPA fallback to index.html) breaks Android Chrome. */
+const NOTIFICATION_ICON = '/pwa-192x192.png';
+
+/** Large image for expanded notification (shade); improves visibility on Android. */
+const NOTIFICATION_IMAGE = '/pwa-512x512.png';
+
+/** DOM typings lag Chrome; SW `showNotification` supports `image` and `actions`. */
+type ServiceWorkerShowNotificationOptions = NotificationOptions & {
+  image?: string;
+  timestamp?: number;
+  vibrate?: number | number[];
+  actions?: Array<{ action: string; title: string; icon?: string }>;
+};
+
 export interface BirthdayNotification {
   id: string;
   name: string;
@@ -115,46 +129,67 @@ class NotificationService {
   }
 
   /**
+   * `actions` are not reliably supported on the window `Notification` constructor; strip them for fallback.
+   */
+  private withoutActions(options: ServiceWorkerShowNotificationOptions): NotificationOptions {
+    const { actions: _omit, ...rest } = options;
+    return rest as NotificationOptions;
+  }
+
+  /**
+   * Android 15+ (incl. Pixel / Android 16) uses compact heads-up: the floating preview still hides after a few
+   * seconds by OS design. The entry usually remains in the notification shade until dismissed; the web
+   * platform cannot keep the heads-up bubble on screen like desktop Chrome.
+   */
+  private buildNotificationOptions(
+    birthday: BirthdayNotification,
+    body: string
+  ): ServiceWorkerShowNotificationOptions {
+    const openUrl = new URL('/settings', window.location.origin).href;
+    return {
+      body,
+      icon: NOTIFICATION_ICON,
+      badge: NOTIFICATION_ICON,
+      image: NOTIFICATION_IMAGE,
+      tag: this.getNotificationKey(birthday),
+      requireInteraction: true,
+      timestamp: Date.now(),
+      vibrate: [200, 100, 200],
+      data: { url: openUrl },
+      actions: [
+        { action: 'open', title: 'Open' },
+        { action: 'dismiss', title: 'Dismiss' },
+      ],
+    };
+  }
+
+  /**
    * Android Chrome (and some other mobile browsers) reliably shows system notifications
    * when they are created from the active service worker. Plain `new Notification()` in the
    * page works on desktop but is often suppressed on mobile without this path.
    */
   private async displayNotification(
     title: string,
-    options: NotificationOptions,
-    daysUntil: BirthdayNotification['daysUntil']
+    options: ServiceWorkerShowNotificationOptions
   ): Promise<boolean> {
     if ('serviceWorker' in navigator) {
       try {
         const registration = await Promise.race([
           navigator.serviceWorker.ready,
           new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('service-worker-ready-timeout')), 4000)
+            setTimeout(() => reject(new Error('service-worker-ready-timeout')), 12000)
           ),
         ]);
-        await registration.showNotification(title, options);
-        if (daysUntil !== 0 && options.tag) {
-          const closeTag = options.tag;
-          setTimeout(async () => {
-            try {
-              const open = await registration.getNotifications({ tag: closeTag });
-              open.forEach((n) => n.close());
-            } catch {
-              /* ignore */
-            }
-          }, 10000);
-        }
+        await registration.showNotification(title, options as NotificationOptions);
         return true;
-      } catch {
-        /* fall back to window Notification */
+      } catch (err) {
+        console.warn('[notifications] service worker showNotification failed:', err);
+        /* fall back to window Notification (often suppressed on Android) */
       }
     }
 
     try {
-      const notification = new Notification(title, options);
-      if (daysUntil !== 0) {
-        setTimeout(() => notification.close(), 10000);
-      }
+      new Notification(title, this.withoutActions(options));
       return true;
     } catch (error) {
       console.error('Error showing notification (window fallback):', error);
@@ -196,15 +231,9 @@ class NotificationService {
         return false;
       }
 
-      const options: NotificationOptions = {
-        body,
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
-        tag: this.getNotificationKey(birthday),
-        requireInteraction: birthday.daysUntil === 0, // Keep today's notifications visible
-      };
+      const options = this.buildNotificationOptions(birthday, body);
 
-      const shown = await this.displayNotification(title, options, birthday.daysUntil);
+      const shown = await this.displayNotification(title, options);
       if (!shown) {
         return false;
       }
