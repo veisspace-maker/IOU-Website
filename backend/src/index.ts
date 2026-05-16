@@ -17,6 +17,7 @@ import salesItemsRoutes from './routes/salesItems';
 import debtTransactionsV2Routes from './routes/debtTransactionsV2';
 import debtRecurrenceTemplatesRoutes from './routes/debtRecurrenceTemplates';
 import { startDebtRecurrenceScheduler } from './jobs/debtRecurrenceJob';
+import { startPublicHolidayImportScheduler } from './jobs/publicHolidayImportJob';
 
 dotenv.config();
 
@@ -139,6 +140,7 @@ async function start() {
     console.log(`Access locally: http://localhost:${PORT}`);
     console.log(`Access on network: http://[YOUR_IP]:${PORT}`);
     startDebtRecurrenceScheduler();
+    startPublicHolidayImportScheduler();
   });
 }
 

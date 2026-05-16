@@ -175,6 +175,7 @@ const PublicHolidaysManager: React.FC = () => {
         {
           year: parseInt(importYear),
           countryCode: importCountry,
+          subdivision: 'AU-VIC',
         },
         { withCredentials: true }
       );
@@ -335,7 +336,9 @@ const PublicHolidaysManager: React.FC = () => {
         <DialogTitle>Import Public Holidays</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
-            Automatically import public holidays from the web for a specific year and country.
+            Import Victorian public holidays (national + VIC-specific) from Nager.Date for the
+            selected year. Holidays also import automatically each 1 January (Melbourne time)
+            while the server is running.
           </DialogContentText>
 
           {importResult && (
@@ -361,7 +364,7 @@ const PublicHolidaysManager: React.FC = () => {
             onChange={(e) => setImportCountry(e.target.value.toUpperCase())}
             sx={{ mb: 2 }}
             placeholder="e.g., AU, US, GB, CA"
-            helperText="Use 2-letter country code (AU=Australia, US=USA, GB=UK, CA=Canada, etc.)"
+            helperText="Use AU for Australia. Imports are filtered to Victoria (AU-VIC) only."
             InputLabelProps={{ shrink: true }}
           />
         </DialogContent>
