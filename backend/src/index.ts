@@ -140,7 +140,6 @@ async function start() {
     console.log(`Access locally: http://localhost:${PORT}`);
     console.log(`Access on network: http://[YOUR_IP]:${PORT}`);
     startDebtRecurrenceScheduler();
-    startPublicHolidayImportScheduler();
   });
 }
 

@@ -1,6 +1,6 @@
 /**
  * Script to initialize default users with hashed passwords
- * Run this script once to set up the three default users
+ * Run this script once to set up the two default users (Leva and Danik)
  */
 
 import pool from '../config/database';
@@ -30,7 +30,6 @@ async function initializeUsers() {
     const users = [
       { username: 'Leva', passwordHash },
       { username: 'Danik', passwordHash },
-      { username: '2 Masters', passwordHash },
     ];
 
     for (const user of users) {

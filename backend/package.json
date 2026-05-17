@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "setup-db": "tsx src/scripts/setupDatabase.ts",
+    "remove-2-masters-user": "tsx src/scripts/removeTwoMastersUser.ts",
     "postgres:set-dev-password": "bash scripts/setPostgresDevPassword.sh",
     "migrate": "node migrate.js"
   },

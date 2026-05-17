@@ -27,7 +27,6 @@ export async function setupDatabase(): Promise<void> {
   const users = [
     { username: 'Leva', passwordHash },
     { username: 'Danik', passwordHash },
-    { username: '2 Masters', passwordHash },
   ];
 
   for (const user of users) {

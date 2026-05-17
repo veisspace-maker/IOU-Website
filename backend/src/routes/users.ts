@@ -4,18 +4,19 @@ import { isAuthenticated } from '../middleware/auth';
 import pool from '../config/database';
 import { SessionUser } from '../types/models';
 import { validatePassword, hashPassword } from '../utils/passwordValidation';
+import { LEAVE_TRACKER_EXCLUDED_USERNAME } from '../constants/leaveTrackerUsers';
 
 const router = Router();
 
 // All user routes require authentication
 router.use(isAuthenticated);
 
-// GET /api/users - List all users (excluding "2 Masters" which is only for debt tracking)
+// GET /api/users - List leave-tracker users (excludes legacy "2 Masters" login if still present)
 router.get('/', async (req: Request, res: Response) => {
   try {
     const result = await pool.query(
       'SELECT id, username, two_factor_enabled, created_at, updated_at FROM users WHERE username != $1 ORDER BY username',
-      ['2 Masters']
+      [LEAVE_TRACKER_EXCLUDED_USERNAME]
     );
 
     const users = result.rows.map((row: any) => ({

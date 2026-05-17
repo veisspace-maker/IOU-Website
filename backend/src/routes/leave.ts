@@ -3,6 +3,7 @@ import { isAuthenticated } from '../middleware/auth';
 import pool from '../config/database';
 import { LeaveRecord, PublicHoliday, ClosedDate } from '../types/models';
 import { calculateBusinessDays, checkLeaveOverlap, calculateLeaveOwed } from '../business-logic/calculations';
+import { LEAVE_TRACKER_EXCLUDED_USERNAME } from '../constants/leaveTrackerUsers';
 
 const router = Router();
 
@@ -514,9 +515,10 @@ router.get('/owed', async (req: Request, res: Response) => {
       updatedAt: new Date(row.updated_at),
     }));
 
-    // Fetch all users
+    // Leave owed is for Leva/Danik only (exclude legacy login; debt "2masters" is separate)
     const usersResult = await pool.query(
-      'SELECT id, username FROM users ORDER BY username'
+      'SELECT id, username FROM users WHERE username != $1 ORDER BY username',
+      [LEAVE_TRACKER_EXCLUDED_USERNAME]
     );
 
     const users = usersResult.rows.map((row: any) => ({
